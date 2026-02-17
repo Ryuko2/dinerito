@@ -27,12 +27,12 @@ const Index = () => {
             <span className="text-2xl">🤠</span>
             <div>
               <h1 className="text-lg font-extrabold leading-tight">Sheriff de Gastos</h1>
-              <p className="text-[11px] text-muted-foreground">Controlamos la lana juntos 💰</p>
+              <p className="text-[11px] text-muted-foreground">Kevin & Ángeles 💰</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <img src={sheriffBoy} alt="Él" className="w-9 h-9 rounded-full ring-2 ring-primary/30" />
-            <img src={sheriffGirl} alt="Ella" className="w-9 h-9 rounded-full ring-2 ring-accent/30" />
+            <img src={sheriffBoy} alt="Kevin" className="w-9 h-9 rounded-full ring-2 ring-primary/30" />
+            <img src={sheriffGirl} alt="Ángeles" className="w-9 h-9 rounded-full ring-2 ring-accent/30" />
           </div>
         </div>
       </header>
