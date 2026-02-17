@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Expense } from '@/lib/types';
+import { Expense, CARDS, PERSON_NAMES } from '@/lib/types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, Wallet, CreditCard, Calendar } from 'lucide-react';
 import sheriffBoy from '@/assets/sheriff-boy.png';
@@ -12,6 +12,8 @@ const COLORS = [
   'hsl(200, 40%, 55%)', 'hsl(280, 30%, 55%)', 'hsl(0, 65%, 55%)',
   'hsl(30, 60%, 50%)', 'hsl(170, 40%, 45%)', 'hsl(60, 50%, 50%)', 'hsl(320, 30%, 50%)',
 ];
+
+const cardLabelMap = Object.fromEntries(CARDS.map(c => [c.value, c.label]));
 
 interface Props {
   expenses: Expense[];
@@ -78,18 +80,18 @@ export default function Dashboard({ expenses }: Props) {
         </Card>
         <Card className="card-hover">
           <CardContent className="pt-4 pb-4 flex items-center gap-3">
-            <img src={sheriffBoy} alt="Él" className="h-8 w-8 rounded-full" />
+            <img src={sheriffBoy} alt={PERSON_NAMES.boyfriend} className="h-8 w-8 rounded-full" />
             <div>
-              <p className="text-xs text-muted-foreground">Él gastó</p>
+              <p className="text-xs text-muted-foreground">{PERSON_NAMES.boyfriend} gastó</p>
               <p className="text-xl font-bold">{fmt(boyfriendTotal)}</p>
             </div>
           </CardContent>
         </Card>
         <Card className="card-hover">
           <CardContent className="pt-4 pb-4 flex items-center gap-3">
-            <img src={sheriffGirl} alt="Ella" className="h-8 w-8 rounded-full" />
+            <img src={sheriffGirl} alt={PERSON_NAMES.girlfriend} className="h-8 w-8 rounded-full" />
             <div>
-              <p className="text-xs text-muted-foreground">Ella gastó</p>
+              <p className="text-xs text-muted-foreground">{PERSON_NAMES.girlfriend} gastó</p>
               <p className="text-xl font-bold">{fmt(girlfriendTotal)}</p>
             </div>
           </CardContent>
@@ -157,7 +159,7 @@ export default function Dashboard({ expenses }: Props) {
                     <img src={e.paidBy === 'boyfriend' ? sheriffBoy : sheriffGirl} alt="" className="w-7 h-7 rounded-full" />
                     <div>
                       <p className="text-sm font-medium">{e.description}</p>
-                      <p className="text-xs text-muted-foreground">{e.category} · {e.brand || 'Sin marca'} · {e.card}</p>
+                      <p className="text-xs text-muted-foreground">{e.category} · {e.brand || 'Sin marca'} · {cardLabelMap[e.card] || e.card}</p>
                     </div>
                   </div>
                   <span className="font-bold text-sm">{fmt(e.amount)}</span>

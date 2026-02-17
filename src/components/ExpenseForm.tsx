@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { saveExpense } from '@/lib/storage';
-import { CATEGORIES, CARDS, Person } from '@/lib/types';
+import { CATEGORIES, CARDS, Person, PERSON_NAMES } from '@/lib/types';
 import { PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import sheriffBoy from '@/assets/sheriff-boy.png';
@@ -60,7 +60,7 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
           <div className="space-y-2">
             <Label>¿Quién pagó?</Label>
             <div className="flex gap-3">
-              {([['boyfriend', sheriffBoy, 'Él 🤠'], ['girlfriend', sheriffGirl, 'Ella 🤠']] as const).map(([value, img, label]) => (
+              {([['boyfriend', sheriffBoy, `${PERSON_NAMES.boyfriend} 🤠`], ['girlfriend', sheriffGirl, `${PERSON_NAMES.girlfriend} 🤠`]] as const).map(([value, img, label]) => (
                 <button
                   key={value}
                   type="button"
@@ -117,11 +117,18 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Método de pago</Label>
+              <Label>Tarjeta / Método</Label>
               <Select value={card} onValueChange={setCard}>
                 <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
                 <SelectContent>
-                  {CARDS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {CARDS.map(c => (
+                    <SelectItem key={c.value} value={c.value}>
+                      <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: c.color }} />
+                        {c.label}
+                      </span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
