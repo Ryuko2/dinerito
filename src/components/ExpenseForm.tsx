@@ -60,7 +60,10 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
           <div className="space-y-2">
             <Label>¿Quién pagó?</Label>
             <div className="flex gap-3">
-              {([['boyfriend', sheriffBoy, `${PERSON_NAMES.boyfriend} 🤠`], ['girlfriend', sheriffGirl, `${PERSON_NAMES.girlfriend} 🤠`]] as const).map(([value, img, label]) => (
+              {([
+                { value: 'boyfriend' as Person, img: sheriffBoy, label: `${PERSON_NAMES.boyfriend} 🤠` },
+                { value: 'girlfriend' as Person, img: sheriffGirl, label: `${PERSON_NAMES.girlfriend} 🤠` },
+              ]).map(({ value, img, label }) => (
                 <button
                   key={value}
                   type="button"
