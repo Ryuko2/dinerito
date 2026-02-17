@@ -31,7 +31,11 @@ Ver **FIREBASE_SETUP.md** para detalles.
 
 ## Deploy a Firebase Hosting
 
+Para publicar la app, ejecuta en tu terminal (requiere `firebase login`):
+
 ```bash
+firebase login
+.\scripts\get-firebase-config.ps1   # genera .env.local
 npm run deploy
 ```
 
