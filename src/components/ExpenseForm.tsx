@@ -4,15 +4,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { saveExpense } from '@/lib/storage';
 import { CATEGORIES, CARDS, Person, PERSON_NAMES } from '@/lib/types';
 import { PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import sheriffBoy from '@/assets/sheriff-boy.png';
 import sheriffGirl from '@/assets/sheriff-girl.png';
 
+type AddExpenseFn = (item: {
+  amount: number;
+  description: string;
+  category: string;
+  card: string;
+  brand: string;
+  paidBy: Person;
+  date: string;
+}) => Promise<unknown>;
+
 interface Props {
-  onExpenseAdded: () => void;
+  onExpenseAdded: AddExpenseFn;
 }
 
 export default function ExpenseForm({ onExpenseAdded }: Props) {
@@ -23,27 +32,38 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
   const [brand, setBrand] = useState('');
   const [paidBy, setPaidBy] = useState<Person | ''>('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !description || !category || !card || !paidBy) {
       toast.error('¡Llena todos los campos obligatorios, vaquero! 🤠');
       return;
     }
-    saveExpense({
-      id: crypto.randomUUID(),
-      amount: parseFloat(amount),
-      description: description.trim().slice(0, 200),
-      category,
-      card,
-      brand: brand.trim().slice(0, 100),
-      paidBy: paidBy as Person,
-      date,
-      createdAt: new Date().toISOString(),
-    });
-    toast.success('¡Gasto registrado! 🌵');
-    setAmount(''); setDescription(''); setCategory(''); setCard(''); setBrand(''); setPaidBy('');
-    onExpenseAdded();
+    setSubmitting(true);
+    try {
+      await onExpenseAdded({
+        amount: parseFloat(amount),
+        description: description.trim().slice(0, 200),
+        category,
+        card,
+        brand: brand.trim().slice(0, 100),
+        paidBy: paidBy as Person,
+        date,
+      });
+      toast.success('¡Gasto registrado! 🌵');
+      setAmount('');
+      setDescription('');
+      setCategory('');
+      setCard('');
+      setBrand('');
+      setPaidBy('');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al guardar. Intenta de nuevo.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -142,8 +162,8 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
             <Input placeholder="Ej: Oxxo, Amazon, Liverpool..." value={brand} onChange={e => setBrand(e.target.value)} maxLength={100} />
           </div>
 
-          <Button type="submit" className="w-full text-base font-bold">
-            Registrar Gasto 🌵
+          <Button type="submit" className="w-full text-base font-bold" disabled={submitting}>
+            {submitting ? 'Guardando...' : 'Registrar Gasto 🌵'}
           </Button>
         </form>
       </CardContent>

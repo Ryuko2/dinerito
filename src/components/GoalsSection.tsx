@@ -6,50 +6,84 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { SavingsGoal } from '@/lib/types';
-import { saveGoal, updateGoal, deleteGoal } from '@/lib/storage';
 import { Target, Plus, Trash2, PiggyBank } from 'lucide-react';
 import { toast } from 'sonner';
 
+type AddGoalFn = (item: {
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  icon: string;
+}) => Promise<unknown>;
+type UpdateGoalFn = (id: string, updates: Partial<SavingsGoal>) => Promise<void>;
+type RemoveGoalFn = (id: string) => Promise<void>;
+
 interface Props {
   goals: SavingsGoal[];
-  onUpdate: () => void;
+  onAddGoal: AddGoalFn;
+  onUpdateGoal: UpdateGoalFn;
+  onRemoveGoal: RemoveGoalFn;
 }
 
 const ICONS = ['🚗', '🏠', '✈️', '💻', '📱', '🎓', '💍', '🎸', '🏖️', '🎯'];
 
-export default function GoalsSection({ goals, onUpdate }: Props) {
+export default function GoalsSection({ goals, onAddGoal, onUpdateGoal, onRemoveGoal }: Props) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [target, setTarget] = useState('');
   const [icon, setIcon] = useState('🎯');
   const [addAmountId, setAddAmountId] = useState<string | null>(null);
   const [addAmount, setAddAmount] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const fmt = (n: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!name.trim() || !target) return;
-    saveGoal({
-      id: crypto.randomUUID(),
-      name: name.trim().slice(0, 100),
-      targetAmount: parseFloat(target),
-      currentAmount: 0,
-      icon,
-      createdAt: new Date().toISOString(),
-    });
-    toast.success('¡Meta creada! 🎯');
-    setName(''); setTarget(''); setIcon('🎯'); setOpen(false);
-    onUpdate();
+    setSubmitting(true);
+    try {
+      await onAddGoal({
+        name: name.trim().slice(0, 100),
+        targetAmount: parseFloat(target),
+        currentAmount: 0,
+        icon,
+      });
+      toast.success('¡Meta creada! 🎯');
+      setName('');
+      setTarget('');
+      setIcon('🎯');
+      setOpen(false);
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al crear meta.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleAddSavings = (goalId: string) => {
+  const handleAddSavings = async (goalId: string) => {
     if (!addAmount || parseFloat(addAmount) <= 0) return;
     const goal = goals.find(g => g.id === goalId);
     if (!goal) return;
-    updateGoal(goalId, { currentAmount: goal.currentAmount + parseFloat(addAmount) });
-    toast.success('¡Ahorro agregado! 🌟');
-    setAddAmountId(null); setAddAmount('');
-    onUpdate();
+    try {
+      await onUpdateGoal(goalId, { currentAmount: goal.currentAmount + parseFloat(addAmount) });
+      toast.success('¡Ahorro agregado! 🌟');
+      setAddAmountId(null);
+      setAddAmount('');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al abonar.');
+    }
+  };
+
+  const handleDelete = async (goalId: string) => {
+    try {
+      await onRemoveGoal(goalId);
+      toast.success('Meta eliminada');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al eliminar.');
+    }
   };
 
   return (
@@ -86,7 +120,9 @@ export default function GoalsSection({ goals, onUpdate }: Props) {
                 <Label>Monto objetivo (MXN)</Label>
                 <Input type="number" step="0.01" min="0" max="99999999" placeholder="0.00" value={target} onChange={e => setTarget(e.target.value)} />
               </div>
-              <Button onClick={handleCreate} className="w-full">Crear Meta 🌟</Button>
+              <Button onClick={handleCreate} className="w-full" disabled={submitting}>
+                {submitting ? 'Creando...' : 'Crear Meta 🌟'}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -118,7 +154,7 @@ export default function GoalsSection({ goals, onUpdate }: Props) {
                       </div>
                     </div>
                     <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => { deleteGoal(goal.id); onUpdate(); toast.success('Meta eliminada'); }}>
+                      <Button size="sm" variant="ghost" onClick={() => handleDelete(goal.id)}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>

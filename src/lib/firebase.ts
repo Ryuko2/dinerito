@@ -1,29 +1,16 @@
-// ==========================================
-// 🔥 FIREBASE CONFIGURATION
-// ==========================================
-// 1. Go to https://console.firebase.google.com
-// 2. Create a project (or use existing)
-// 3. Add a Web app and copy the config below
-// 4. Enable Firestore Database in the Firebase console
-// 5. Uncomment the code below and fill in your config
-// 6. Then update src/lib/storage.ts to use Firestore
-// ==========================================
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
-// import { initializeApp } from 'firebase/app';
-// import { getFirestore } from 'firebase/firestore';
-// import { getAuth } from 'firebase/auth';
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+};
 
-// const firebaseConfig = {
-//   apiKey: "YOUR_API_KEY",
-//   authDomain: "YOUR_PROJECT.firebaseapp.com",
-//   projectId: "YOUR_PROJECT_ID",
-//   storageBucket: "YOUR_PROJECT.appspot.com",
-//   messagingSenderId: "YOUR_SENDER_ID",
-//   appId: "YOUR_APP_ID"
-// };
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+export const db = getFirestore(app);
 
-// const app = initializeApp(firebaseConfig);
-// export const db = getFirestore(app);
-// export const auth = getAuth(app);
-
-export {}; // placeholder export
+export default app;

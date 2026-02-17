@@ -1,73 +1,58 @@
-# Welcome to your Lovable project
+# 🤠 Sheriff de Gastos — Dinerito
 
-## Project info
+Tracker de gastos en pareja con temática vaquera. Construido con **Vite + React + TypeScript + Tailwind + shadcn/ui** y **Firebase Firestore**.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Inicio rápido
 
-## How can I edit this code?
+```bash
+# 1. Clonar e instalar
+git clone <TU_REPO_URL>
+cd dinerito
+npm install
 
-There are several ways of editing your application.
+# 2. Configurar Firebase (crea .env.local)
+# En PowerShell, tras firebase login:
+.\scripts\get-firebase-config.ps1
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 3. Desarrollo
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Abre http://localhost:8080
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Configuración de Firebase
 
-**Use GitHub Codespaces**
+1. Proyecto **sheriff-de-gastos** ya creado en Firebase.
+2. Inicia sesión: `firebase login`
+3. Ejecuta: `.\scripts\get-firebase-config.ps1` para generar `.env.local`
+4. O copia `.env.example` a `.env.local` y rellena los valores manualmente.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Ver **FIREBASE_SETUP.md** para detalles.
 
-## What technologies are used for this project?
+## Deploy a Firebase Hosting
 
-This project is built with:
+```bash
+npm run deploy
+```
+
+O solo hosting: `npm run deploy:hosting`
+
+## Scripts disponibles
+
+| Comando             | Descripción                    |
+|---------------------|--------------------------------|
+| `npm run dev`       | Servidor de desarrollo         |
+| `npm run build`     | Build de producción            |
+| `npm run deploy`    | Build + deploy a Firebase      |
+| `npm run deploy:hosting` | Solo Hosting             |
+| `npm run deploy:rules`   | Solo reglas Firestore     |
+
+## Tech stack
 
 - Vite
-- TypeScript
 - React
-- shadcn-ui
+- TypeScript
 - Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- shadcn/ui
+- Firebase (Firestore, Hosting)
+- Recharts
