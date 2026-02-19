@@ -4,9 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CATEGORIES, CARDS, Person, PERSON_NAMES } from '@/lib/types';
+import { Switch } from '@/components/ui/switch';
+import { CATEGORIES, CARDS, Person, PERSON_NAMES, PaymentType } from '@/lib/types';
 import { PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import CategoryIcon from '@/components/CategoryIcon';
 import sheriffBoy from '@/assets/sheriff-boy.png';
 import sheriffGirl from '@/assets/sheriff-girl.png';
 
@@ -18,6 +20,8 @@ type AddExpenseFn = (item: {
   brand: string;
   paidBy: Person;
   date: string;
+  paymentType?: PaymentType;
+  thirdPartyName?: string;
 }) => Promise<unknown>;
 
 interface Props {
@@ -32,12 +36,15 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
   const [brand, setBrand] = useState('');
   const [paidBy, setPaidBy] = useState<Person | ''>('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentType, setPaymentType] = useState<PaymentType>('');
+  const [isThirdParty, setIsThirdParty] = useState(false);
+  const [thirdPartyName, setThirdPartyName] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !description || !category || !card || !paidBy) {
-      toast.error('¡Llena todos los campos obligatorios, vaquero! 🤠');
+      toast.error('Completa los campos obligatorios.');
       return;
     }
     setSubmitting(true);
@@ -50,24 +57,29 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
         brand: brand.trim().slice(0, 100),
         paidBy: paidBy as Person,
         date,
+        paymentType: paymentType || undefined,
+        thirdPartyName: isThirdParty && thirdPartyName.trim() ? thirdPartyName.trim() : undefined,
       });
-      toast.success('¡Gasto registrado! 🌵');
+      toast.success('Gasto registrado.');
       setAmount('');
       setDescription('');
       setCategory('');
       setCard('');
       setBrand('');
       setPaidBy('');
+      setPaymentType('');
+      setIsThirdParty(false);
+      setThirdPartyName('');
     } catch (err) {
       console.error(err);
-      toast.error('Error al guardar. Intenta de nuevo.');
+      toast.error('Error al guardar.');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Card className="card-hover">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl">
           <PlusCircle className="h-5 w-5 text-primary" />
@@ -78,11 +90,11 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Who paid */}
           <div className="space-y-2">
-            <Label>¿Quién pagó?</Label>
+            <Label>Pagado por</Label>
             <div className="flex gap-3">
               {([
-                { value: 'boyfriend' as Person, img: sheriffBoy, label: `${PERSON_NAMES.boyfriend} 🤠` },
-                { value: 'girlfriend' as Person, img: sheriffGirl, label: `${PERSON_NAMES.girlfriend} 🤠` },
+                { value: 'boyfriend' as Person, img: sheriffBoy, label: PERSON_NAMES.boyfriend },
+                { value: 'girlfriend' as Person, img: sheriffGirl, label: PERSON_NAMES.girlfriend },
               ]).map(({ value, img, label }) => (
                 <button
                   key={value}
@@ -125,22 +137,29 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>Descripción</Label>
-            <Input placeholder="¿En qué se gastó?" value={description} onChange={e => setDescription(e.target.value)} maxLength={200} />
+            <Label>Descripcion</Label>
+            <Input placeholder="Concepto del gasto" value={description} onChange={e => setDescription(e.target.value)} maxLength={200} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Categoría</Label>
+              <Label>Categoria</Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {CATEGORIES.map(c => (
+                    <SelectItem key={c} value={c}>
+                      <span className="flex items-center gap-2">
+                        <CategoryIcon category={c} className="h-3.5 w-3.5" />
+                        {c}
+                      </span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Tarjeta / Método</Label>
+              <Label>Tarjeta / Metodo</Label>
               <Select value={card} onValueChange={setCard}>
                 <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
                 <SelectContent>
@@ -157,13 +176,37 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Marca / Tienda (opcional)</Label>
-            <Input placeholder="Ej: Oxxo, Amazon, Liverpool..." value={brand} onChange={e => setBrand(e.target.value)} maxLength={100} />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Tipo de pago <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+              <Select value={paymentType} onValueChange={v => setPaymentType(v as PaymentType)}>
+                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="credito">Credito</SelectItem>
+                  <SelectItem value="debito">Debito</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Marca / Tienda <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+              <Input placeholder="Ej: Oxxo, Amazon" value={brand} onChange={e => setBrand(e.target.value)} maxLength={100} />
+            </div>
           </div>
 
+          {/* Third party */}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+            <Label className="text-sm">Gasto de alguien mas</Label>
+            <Switch checked={isThirdParty} onCheckedChange={setIsThirdParty} />
+          </div>
+          {isThirdParty && (
+            <div className="space-y-2">
+              <Label>Nombre de la persona</Label>
+              <Input placeholder="Nombre" value={thirdPartyName} onChange={e => setThirdPartyName(e.target.value)} maxLength={50} />
+            </div>
+          )}
+
           <Button type="submit" className="w-full text-base font-bold" disabled={submitting}>
-            {submitting ? 'Guardando...' : 'Registrar Gasto 🌵'}
+            {submitting ? 'Guardando...' : 'Registrar Gasto'}
           </Button>
         </form>
       </CardContent>

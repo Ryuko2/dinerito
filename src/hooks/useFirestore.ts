@@ -8,7 +8,6 @@ import {
   doc,
   serverTimestamp,
   query,
-  orderBy,
   DocumentData,
   QueryConstraint,
 } from "firebase/firestore";
@@ -29,13 +28,13 @@ export function useCollection<T extends DocumentData>(
       q,
       (snapshot) => {
         const docs = snapshot.docs.map((d) => {
-          const data = d.data();
+          const raw = d.data();
           return {
+            ...raw,
             id: d.id,
-            ...data,
-            createdAt: data.createdAt?.toDate?.()?.toISOString?.() ?? data.createdAt,
-            updatedAt: data.updatedAt?.toDate?.()?.toISOString?.() ?? data.updatedAt,
-          } as T & { id: string };
+            createdAt: raw.createdAt?.toDate?.()?.toISOString?.() ?? raw.createdAt,
+            updatedAt: raw.updatedAt?.toDate?.()?.toISOString?.() ?? raw.updatedAt,
+          } as unknown as T & { id: string };
         });
         setData(docs);
         setLoading(false);
@@ -47,7 +46,7 @@ export function useCollection<T extends DocumentData>(
       }
     );
     return () => unsub();
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- constraints are typically static
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collectionName]);
 
   const add = async (item: Omit<T, "id">) => {

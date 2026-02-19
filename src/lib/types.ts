@@ -2,8 +2,10 @@ export type Person = 'boyfriend' | 'girlfriend';
 
 export const PERSON_NAMES: Record<Person, string> = {
   boyfriend: 'Kevin',
-  girlfriend: 'Ángeles',
+  girlfriend: 'Angeles',
 };
+
+export type PaymentType = 'credito' | 'debito' | '';
 
 export interface Expense {
   id: string;
@@ -14,6 +16,27 @@ export interface Expense {
   brand: string;
   paidBy: Person;
   date: string;
+  createdAt: string;
+  paymentType?: PaymentType;
+  thirdPartyName?: string;
+}
+
+export interface Income {
+  id: string;
+  amount: number;
+  description: string;
+  person: Person;
+  date: string;
+  createdAt: string;
+}
+
+export interface Budget {
+  id: string;
+  name: string;
+  category: string;
+  person: Person | 'all';
+  limitAmount: number;
+  period: 'weekly' | 'biweekly' | 'monthly';
   createdAt: string;
 }
 
@@ -28,8 +51,21 @@ export interface SavingsGoal {
 
 export const CATEGORIES = [
   'Comida', 'Transporte', 'Entretenimiento', 'Ropa', 'Salud',
-  'Hogar', 'Educación', 'Regalos', 'Suscripciones', 'Otro'
+  'Hogar', 'Educacion', 'Regalos', 'Suscripciones', 'Otro'
 ] as const;
+
+export const CATEGORY_ICONS: Record<string, string> = {
+  'Comida': 'UtensilsCrossed',
+  'Transporte': 'Car',
+  'Entretenimiento': 'Film',
+  'Ropa': 'ShoppingBag',
+  'Salud': 'Heart',
+  'Hogar': 'Home',
+  'Educacion': 'GraduationCap',
+  'Regalos': 'Gift',
+  'Suscripciones': 'Repeat',
+  'Otro': 'MoreHorizontal',
+};
 
 export interface CardOption {
   value: string;
@@ -38,13 +74,15 @@ export interface CardOption {
 }
 
 export const CARDS: CardOption[] = [
-  { value: 'efectivo', label: 'Efectivo 💵', color: 'hsl(145, 50%, 42%)' },
+  { value: 'efectivo', label: 'Efectivo', color: 'hsl(145, 50%, 42%)' },
   { value: 'santander', label: 'Santander', color: 'hsl(0, 80%, 45%)' },
   { value: 'bbva', label: 'BBVA', color: 'hsl(210, 80%, 40%)' },
   { value: 'amex', label: 'American Express', color: 'hsl(210, 30%, 45%)' },
   { value: 'banamex', label: 'Citibanamex', color: 'hsl(210, 90%, 45%)' },
   { value: 'banorte', label: 'Banorte', color: 'hsl(15, 85%, 48%)' },
-  { value: 'hsbc', label: 'HSBC', color: 'hsl(0, 75%, 45%)' },
-  { value: 'nu', label: 'Nu', color: 'hsl(275, 70%, 50%)' },
   { value: 'transferencia', label: 'Transferencia', color: 'hsl(200, 40%, 55%)' },
 ];
+
+export const GOAL_ICONS = [
+  'Car', 'Home', 'Plane', 'Laptop', 'Smartphone', 'GraduationCap', 'Gem', 'Guitar', 'Palmtree', 'Target'
+] as const;
