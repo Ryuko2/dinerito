@@ -77,7 +77,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Editar Gasto</DialogTitle>
         </DialogHeader>

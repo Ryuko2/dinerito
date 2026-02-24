@@ -92,7 +92,7 @@ export default function BudgetSection({ budgets, expenses, onAddBudget, onRemove
         </h2>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" /> Nuevo</Button></DialogTrigger>
-          <DialogContent>
+          <DialogContent aria-describedby={undefined}>
             <DialogHeader><DialogTitle>Crear Presupuesto</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div><Label className="text-xs">Nombre</Label><Input placeholder="Ej: Comida mensual" value={name} onChange={e => setName(e.target.value)} maxLength={50} /></div>

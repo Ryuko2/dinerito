@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Expense, CARDS, PERSON_NAMES, CATEGORIES, Person } from '@/lib/types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { TrendingUp, Wallet, CreditCard, Filter } from 'lucide-react';
@@ -314,7 +314,8 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
       />
 
       <Dialog open={!!avatarViewer} onOpenChange={() => setAvatarViewer(null)}>
-        <DialogContent className="max-w-xs p-2">
+        <DialogContent className="max-w-xs p-2" aria-describedby={undefined}>
+          <DialogTitle className="sr-only">Ver avatar</DialogTitle>
           {avatarViewer && <img src={avatarViewer} alt="Avatar" className="w-full rounded-xl" />}
         </DialogContent>
       </Dialog>

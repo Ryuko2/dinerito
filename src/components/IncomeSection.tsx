@@ -59,7 +59,7 @@ export default function IncomeSection({ incomes, expenses, onAddIncome, onRemove
         </h2>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" /> Agregar</Button></DialogTrigger>
-          <DialogContent>
+          <DialogContent aria-describedby={undefined}>
             <DialogHeader><DialogTitle>Registrar Ingreso</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div className="flex gap-3">

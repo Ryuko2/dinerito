@@ -1,3 +1,7 @@
+/**
+ * WARNING: Changing collection names or field names in Firestore-related code
+ * will break existing user data. Always write a migration before deploying.
+ */
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
@@ -12,5 +16,12 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const db = getFirestore(app);
+
+// Validate config in development - missing env vars cause silent Firestore failures
+if (import.meta.env.DEV && !firebaseConfig.projectId) {
+  console.warn(
+    '[Firebase] Missing VITE_FIREBASE_* env vars. Create .env.local from .env.example and add your Firebase config.'
+  );
+}
 
 export default app;

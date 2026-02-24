@@ -1,16 +1,32 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ExpenseForm from '@/components/ExpenseForm';
 import Dashboard from '@/components/Dashboard';
 import GoalsSection from '@/components/GoalsSection';
 import IncomeSection from '@/components/IncomeSection';
 import BudgetSection from '@/components/BudgetSection';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { useCollection } from '@/hooks/useFirestore';
 import { Expense, SavingsGoal, Income, Budget } from '@/lib/types';
 import { orderBy } from 'firebase/firestore';
-import { BarChart3, PlusCircle, Target, DollarSign, PieChart } from 'lucide-react';
+import { BarChart3, PlusCircle, Target, DollarSign, PieChart, Settings2, Download, Upload } from 'lucide-react';
+import { toast } from 'sonner';
 import sheriffBoy from '@/assets/sheriff-boy.png';
 import sheriffGirl from '@/assets/sheriff-girl.png';
+import {
+  exportAllData,
+  downloadBackup,
+  importData,
+} from '@/lib/persistence';
+import { runLegacyMigration } from '@/lib/migrateLegacy';
+import { sanitizeForFirestore } from '@/lib/utils';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const TABS = [
   { key: 'add', label: 'Agregar', icon: PlusCircle },
@@ -27,6 +43,13 @@ const Index = () => {
   const [avatarViewer, setAvatarViewer] = useState<string | null>(null);
   const touchStartX = useRef<number | null>(null);
 
+  // One-time migration: recover data from old localStorage keys
+  useEffect(() => {
+    runLegacyMigration().then((didMigrate) => {
+      if (didMigrate) toast.success('Datos recuperados correctamente.');
+    });
+  }, []);
+
   const { data: expenses, loading: el, error: ee, add: addExpense, update: updateExpense, remove: removeExpense } =
     useCollection<Expense>('expenses', [orderBy('createdAt', 'desc')]);
   const { data: goals, loading: gl, error: ge, add: addGoal, update: updateGoal, remove: removeGoal } =
@@ -38,6 +61,80 @@ const Index = () => {
 
   const loading = el || gl || il || bl;
   const error = ee || ge || ie || be;
+
+  const handleExport = () => {
+    const backup = exportAllData({ expenses, goals, incomes, budgets });
+    downloadBackup(backup);
+    toast.success('Respaldo descargado.');
+  };
+
+  const handleImport = async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = importData(text);
+        if (!data) {
+          toast.error('Archivo no válido.');
+          return;
+        }
+        let count = 0;
+        for (const e of data.expenses) {
+          const item = e as Record<string, unknown>;
+          if (!item || typeof item !== 'object') continue;
+          const { id: _id, ...rest } = item;
+          await addDoc(collection(db, 'expenses'), sanitizeForFirestore({
+            ...rest,
+            schemaVersion: '1.0',
+            createdAt: rest.createdAt ? new Date(String(rest.createdAt)) : serverTimestamp(),
+          }));
+          count++;
+        }
+        for (const g of data.goals) {
+          const item = g as Record<string, unknown>;
+          if (!item || typeof item !== 'object') continue;
+          const { id: _id, ...rest } = item;
+          await addDoc(collection(db, 'goals'), sanitizeForFirestore({
+            ...rest,
+            schemaVersion: '1.0',
+            createdAt: rest.createdAt ? new Date(String(rest.createdAt)) : serverTimestamp(),
+          }));
+          count++;
+        }
+        for (const i of data.incomes || []) {
+          const item = i as Record<string, unknown>;
+          if (!item || typeof item !== 'object') continue;
+          const { id: _id, ...rest } = item;
+          await addDoc(collection(db, 'incomes'), sanitizeForFirestore({
+            ...rest,
+            schemaVersion: '1.0',
+            createdAt: rest.createdAt ? new Date(String(rest.createdAt)) : serverTimestamp(),
+          }));
+          count++;
+        }
+        for (const b of data.budgets || []) {
+          const item = b as Record<string, unknown>;
+          if (!item || typeof item !== 'object') continue;
+          const { id: _id, ...rest } = item;
+          await addDoc(collection(db, 'budgets'), sanitizeForFirestore({
+            ...rest,
+            schemaVersion: '1.0',
+            createdAt: rest.createdAt ? new Date(String(rest.createdAt)) : serverTimestamp(),
+          }));
+          count++;
+        }
+        toast.success(`Datos restaurados: ${count} registros.`);
+      } catch (err) {
+        console.error(err);
+        toast.error('Error al importar.');
+      }
+    };
+    input.click();
+  };
 
   const tabIndex = TABS.findIndex(t => t.key === activeTab);
 
@@ -65,7 +162,8 @@ const Index = () => {
     );
   }
 
-  if (error) {
+  const hasAnyData = expenses.length > 0 || goals.length > 0 || incomes.length > 0 || budgets.length > 0;
+  if (error && !hasAnyData) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-8">
         <div className="flex flex-col items-center gap-3 text-destructive text-center">
@@ -79,6 +177,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {error && hasAnyData && (
+        <div className="bg-amber-500/15 text-amber-800 dark:text-amber-200 text-center py-1.5 text-xs font-medium px-4">
+          Mostrando datos guardados. Revisa tu conexión para sincronizar con la nube.
+        </div>
+      )}
       {/* Header */}
       <header className="glass sticky top-0 z-10 border-b">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -92,6 +195,23 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                  <Settings2 className="h-5 w-5 text-muted-foreground" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-2" align="end">
+                <div className="space-y-1">
+                  <Button variant="ghost" className="w-full justify-start gap-2" onClick={handleExport}>
+                    <Download className="h-4 w-4" /> Exportar mis datos
+                  </Button>
+                  <Button variant="ghost" className="w-full justify-start gap-2" onClick={handleImport}>
+                    <Upload className="h-4 w-4" /> Importar datos
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
             <img src={sheriffBoy} alt="Kevin" className="w-9 h-9 rounded-full ring-2 ring-primary/20 cursor-pointer transition-transform hover:scale-105" onClick={() => setAvatarViewer(sheriffBoy)} />
             <img src={sheriffGirl} alt="Angeles" className="w-9 h-9 rounded-full ring-2 ring-accent/20 cursor-pointer transition-transform hover:scale-105" onClick={() => setAvatarViewer(sheriffGirl)} />
           </div>
@@ -136,7 +256,8 @@ const Index = () => {
 
       {/* Avatar viewer */}
       <Dialog open={!!avatarViewer} onOpenChange={() => setAvatarViewer(null)}>
-        <DialogContent className="max-w-xs p-2 rounded-2xl">
+        <DialogContent className="max-w-xs p-2 rounded-2xl" aria-describedby={undefined}>
+          <DialogTitle className="sr-only">Ver avatar</DialogTitle>
           {avatarViewer && <img src={avatarViewer} alt="Avatar" className="w-full rounded-xl" />}
         </DialogContent>
       </Dialog>
