@@ -8,6 +8,7 @@ import { Expense, CARDS, PERSON_NAMES, CATEGORIES, Person } from '@/lib/types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { TrendingUp, Wallet, CreditCard, Filter } from 'lucide-react';
 import CategoryIcon from '@/components/CategoryIcon';
+import CardBrandIcon from '@/components/CardBrandIcon';
 import ExpenseEditDialog from '@/components/ExpenseEditDialog';
 import PersonalDashboard from '@/components/PersonalDashboard';
 import sheriffBoy from '@/assets/sheriff-boy.png';
@@ -30,7 +31,6 @@ interface Props {
 export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }: Props) {
   const now = new Date();
   const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-  const yearStart = `${now.getFullYear()}-01-01`;
   const todayStr = now.toISOString().split('T')[0];
 
   const [dateFrom, setDateFrom] = useState(monthStart);
@@ -92,16 +92,19 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-primary" /> Dashboard
+          <div className="p-1.5 rounded-lg bg-primary/15">
+            <TrendingUp className="h-5 w-5 text-primary" />
+          </div>
+          Dashboard
         </h2>
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="border-0 shadow-md overflow-hidden">
         <CardContent className="pt-4 pb-4">
           <div className="flex items-center gap-2 mb-3">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-semibold">Filtros</span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Filtros</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -129,7 +132,14 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas</SelectItem>
-                  {CARDS.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                  {CARDS.map(c => (
+                    <SelectItem key={c.value} value={c.value}>
+                      <span className="flex items-center gap-2">
+                        <CardBrandIcon card={c.value} className="h-4 w-4" />
+                        {c.label}
+                      </span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -139,7 +149,14 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas</SelectItem>
-                  {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {CATEGORIES.map(c => (
+                    <SelectItem key={c} value={c}>
+                      <span className="flex items-center gap-2">
+                        <CategoryIcon category={c} className="h-3.5 w-3.5" />
+                        {c}
+                      </span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -160,39 +177,41 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Card>
+        <Card className="border-0 shadow-md bg-gradient-to-br from-primary/10 to-primary/5">
           <CardContent className="pt-4 pb-4 flex items-center gap-3">
-            <Wallet className="h-8 w-8 text-primary" />
+            <div className="p-2 rounded-xl bg-primary/15">
+              <Wallet className="h-6 w-6 text-primary" />
+            </div>
             <div>
-              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Total</p>
               <p className="text-xl font-bold">{fmt(total)}</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:ring-2 ring-primary/30 transition-all" onClick={() => setPersonalPerson('boyfriend')}>
+        <Card className="cursor-pointer hover:ring-2 ring-primary/30 transition-all border-0 shadow-md" onClick={() => setPersonalPerson('boyfriend')}>
           <CardContent className="pt-4 pb-4 flex items-center gap-3">
             <img
               src={sheriffBoy}
               alt={PERSON_NAMES.boyfriend}
-              className="h-8 w-8 rounded-full cursor-pointer"
+              className="h-10 w-10 rounded-full ring-2 ring-primary/20 cursor-pointer"
               onClick={(e) => { e.stopPropagation(); setAvatarViewer(sheriffBoy); }}
             />
             <div>
-              <p className="text-xs text-muted-foreground">{PERSON_NAMES.boyfriend}</p>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">{PERSON_NAMES.boyfriend}</p>
               <p className="text-xl font-bold">{fmt(boyfriendTotal)}</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:ring-2 ring-primary/30 transition-all" onClick={() => setPersonalPerson('girlfriend')}>
+        <Card className="cursor-pointer hover:ring-2 ring-primary/30 transition-all border-0 shadow-md" onClick={() => setPersonalPerson('girlfriend')}>
           <CardContent className="pt-4 pb-4 flex items-center gap-3">
             <img
               src={sheriffGirl}
               alt={PERSON_NAMES.girlfriend}
-              className="h-8 w-8 rounded-full cursor-pointer"
+              className="h-10 w-10 rounded-full ring-2 ring-accent/20 cursor-pointer"
               onClick={(e) => { e.stopPropagation(); setAvatarViewer(sheriffGirl); }}
             />
             <div>
-              <p className="text-xs text-muted-foreground">{PERSON_NAMES.girlfriend}</p>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">{PERSON_NAMES.girlfriend}</p>
               <p className="text-xl font-bold">{fmt(girlfriendTotal)}</p>
             </div>
           </CardContent>
@@ -201,9 +220,9 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
+        <Card className="border-0 shadow-md">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-sm flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-primary" /> Por Categoria
             </CardTitle>
           </CardHeader>
@@ -229,9 +248,9 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 shadow-md">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-sm flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-primary" /> Tendencia
             </CardTitle>
           </CardHeader>
@@ -244,7 +263,7 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip formatter={(v: number) => fmt(v)} />
-                  <Bar dataKey="total" fill="hsl(15, 65%, 52%)" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="total" fill="hsl(15, 65%, 52%)" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -252,27 +271,30 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
         </Card>
       </div>
 
-      {/* Expense list - continuous scroll */}
+      {/* Expense list */}
       {filtered.length > 0 && (
-        <Card>
+        <Card className="border-0 shadow-md">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Gastos ({filtered.length})</CardTitle>
+            <CardTitle className="text-sm">Gastos ({filtered.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-1.5 max-h-[60vh] overflow-y-auto overscroll-contain">
               {filtered.slice().reverse().map(e => (
                 <div
                   key={e.id}
-                  className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors active:scale-[0.98]"
+                  className="flex items-center justify-between p-3 rounded-xl bg-muted/40 cursor-pointer hover:bg-muted/70 transition-all active:scale-[0.98] group"
                   onClick={() => setEditExpense(e)}
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <CategoryIcon category={e.category} className="h-5 w-5 text-primary shrink-0" />
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
+                      <CategoryIcon category={e.category} className="h-4 w-4 text-primary" />
+                    </div>
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{e.description}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {e.category} · {cardLabelMap[e.card] || e.card} · {e.date}
-                      </p>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <CardBrandIcon card={e.card} className="h-3.5 w-3.5" />
+                        <span className="truncate">{cardLabelMap[e.card] || e.card} · {e.date}</span>
+                      </div>
                     </div>
                   </div>
                   <span className="font-bold text-sm shrink-0 ml-2">{fmt(e.amount)}</span>
@@ -291,7 +313,6 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
         onDelete={onDeleteExpense}
       />
 
-      {/* Avatar viewer */}
       <Dialog open={!!avatarViewer} onOpenChange={() => setAvatarViewer(null)}>
         <DialogContent className="max-w-xs p-2">
           {avatarViewer && <img src={avatarViewer} alt="Avatar" className="w-full rounded-xl" />}

@@ -8,6 +8,7 @@ import { Expense, CARDS, PERSON_NAMES, CATEGORIES, Person } from '@/lib/types';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { ArrowLeft, Wallet } from 'lucide-react';
 import CategoryIcon from '@/components/CategoryIcon';
+import CardBrandIcon from '@/components/CardBrandIcon';
 import ExpenseEditDialog from '@/components/ExpenseEditDialog';
 import sheriffBoy from '@/assets/sheriff-boy.png';
 import sheriffGirl from '@/assets/sheriff-girl.png';
@@ -58,8 +59,8 @@ export default function PersonalDashboard({ person, expenses, onBack, onUpdateEx
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={onBack}><ArrowLeft className="h-4 w-4" /></Button>
-        <img src={avatar} alt="" className="h-8 w-8 rounded-full" />
+        <Button variant="ghost" size="sm" onClick={onBack} className="rounded-xl"><ArrowLeft className="h-4 w-4" /></Button>
+        <img src={avatar} alt="" className="h-9 w-9 rounded-full ring-2 ring-primary/20" />
         <h2 className="text-lg font-bold">{PERSON_NAMES[person]}</h2>
       </div>
 
@@ -69,22 +70,44 @@ export default function PersonalDashboard({ person, expenses, onBack, onUpdateEx
         <div><Label className="text-xs">Tarjeta</Label>
           <Select value={filterCard} onValueChange={setFilterCard}>
             <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">Todas</SelectItem>{CARDS.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              {CARDS.map(c => (
+                <SelectItem key={c.value} value={c.value}>
+                  <span className="flex items-center gap-2">
+                    <CardBrandIcon card={c.value} className="h-4 w-4" />
+                    {c.label}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
         <div><Label className="text-xs">Categoria</Label>
           <Select value={filterCategory} onValueChange={setFilterCategory}>
             <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">Todas</SelectItem>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              {CATEGORIES.map(c => (
+                <SelectItem key={c} value={c}>
+                  <span className="flex items-center gap-2">
+                    <CategoryIcon category={c} className="h-3.5 w-3.5" />
+                    {c}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
       </div>
 
-      <Card>
+      <Card className="border-0 shadow-md bg-gradient-to-br from-primary/10 to-transparent">
         <CardContent className="pt-4 pb-4 flex items-center gap-3">
-          <Wallet className="h-8 w-8 text-primary" />
+          <div className="p-2 rounded-xl bg-primary/15">
+            <Wallet className="h-6 w-6 text-primary" />
+          </div>
           <div>
-            <p className="text-xs text-muted-foreground">Total gastos</p>
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Total gastos</p>
             <p className="text-xl font-bold">{fmt(total)}</p>
             <p className="text-xs text-muted-foreground">{filtered.length} registros</p>
           </div>
@@ -92,8 +115,8 @@ export default function PersonalDashboard({ person, expenses, onBack, onUpdateEx
       </Card>
 
       {byCategory.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-base">Por Categoria</CardTitle></CardHeader>
+        <Card className="border-0 shadow-md">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Por Categoria</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
@@ -108,17 +131,22 @@ export default function PersonalDashboard({ person, expenses, onBack, onUpdateEx
         </Card>
       )}
 
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base">Gastos</CardTitle></CardHeader>
+      <Card className="border-0 shadow-md">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Gastos</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-1.5 max-h-[50vh] overflow-y-auto">
             {filtered.slice().reverse().map(e => (
-              <div key={e.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors" onClick={() => setEditExpense(e)}>
-                <div className="flex items-center gap-2 min-w-0">
-                  <CategoryIcon category={e.category} className="h-4 w-4 text-primary shrink-0" />
+              <div key={e.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/40 cursor-pointer hover:bg-muted/70 transition-all active:scale-[0.98]" onClick={() => setEditExpense(e)}>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
+                    <CategoryIcon category={e.category} className="h-4 w-4 text-primary" />
+                  </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{e.description}</p>
-                    <p className="text-xs text-muted-foreground truncate">{e.category} · {cardLabelMap[e.card] || e.card} · {e.date}</p>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <CardBrandIcon card={e.card} className="h-3.5 w-3.5" />
+                      <span className="truncate">{cardLabelMap[e.card] || e.card} · {e.date}</span>
+                    </div>
                   </div>
                 </div>
                 <span className="font-bold text-sm shrink-0 ml-2">{fmt(e.amount)}</span>
