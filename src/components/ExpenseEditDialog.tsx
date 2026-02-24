@@ -1,5 +1,15 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,6 +37,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
   const [date, setDate] = useState('');
   const [paymentType, setPaymentType] = useState<PaymentType>('');
   const [saving, setSaving] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const prevId = useState<string | null>(null);
   if (expense && expense.id !== prevId[0]) {
@@ -66,6 +77,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
   };
 
   const handleDelete = async () => {
+    setConfirmDeleteOpen(false);
     try {
       await onDelete(expense.id);
       toast.success('Gasto eliminado.');
@@ -158,10 +170,25 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
             <Button onClick={handleSave} className="flex-1 rounded-xl" disabled={saving}>
               {saving ? 'Guardando...' : 'Guardar'}
             </Button>
-            <Button variant="destructive" onClick={handleDelete} className="rounded-xl">Eliminar</Button>
+            <Button variant="destructive" onClick={() => setConfirmDeleteOpen(true)} className="rounded-xl">Eliminar</Button>
           </div>
         </div>
       </DialogContent>
+
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar este gasto?</AlertDialogTitle>
+            <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

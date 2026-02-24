@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { sanitizeForFirestore } from "@/lib/utils";
+import { normalizeDocument } from "@/lib/migrateFirestore";
 import {
   saveToLocal,
   loadFromLocal,
@@ -56,13 +57,19 @@ export function useCollection<T extends DocumentData>(
       q,
       (snapshot) => {
         const docs = snapshot.docs.map((d) => {
-          const raw = d.data();
-          return {
+          const raw = d.data() as Record<string, unknown>;
+          const base = {
             ...raw,
             id: d.id,
-            createdAt: raw.createdAt?.toDate?.()?.toISOString?.() ?? raw.createdAt,
-            updatedAt: raw.updatedAt?.toDate?.()?.toISOString?.() ?? raw.updatedAt,
-          } as unknown as T & { id: string };
+            createdAt: raw.createdAt && typeof (raw.createdAt as { toDate?: () => Date }).toDate === "function"
+              ? (raw.createdAt as { toDate: () => Date }).toDate().toISOString?.()
+              : raw.createdAt,
+            updatedAt: raw.updatedAt && typeof (raw.updatedAt as { toDate?: () => Date }).toDate === "function"
+              ? (raw.updatedAt as { toDate: () => Date }).toDate().toISOString?.()
+              : raw.updatedAt,
+          };
+          const normalized = normalizeDocument(collectionName, base, d.id);
+          return normalized as unknown as T & { id: string };
         });
         setData(docs);
         setError(null);
