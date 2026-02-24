@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 35 30% 96%;
+    --foreground: 25 30% 15%;
+
+    --card: 35 25% 98%;
+    --card-foreground: 25 30% 15%;
+
+    --popover: 35 25% 98%;
+    --popover-foreground: 25 30% 15%;
+
+    --primary: 15 65% 52%;
+    --primary-foreground: 35 30% 98%;
+
+    --secondary: 45 55% 85%;
+    --secondary-foreground: 25 30% 20%;
+
+    --muted: 35 20% 92%;
+    --muted-foreground: 25 15% 50%;
+
+    --accent: 145 30% 45%;
+    --accent-foreground: 145 10% 98%;
+
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 30 20% 88%;
+    --input: 30 20% 88%;
+    --ring: 15 65% 52%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 35 25% 95%;
+    --sidebar-foreground: 25 30% 15%;
+    --sidebar-primary: 15 65% 52%;
+    --sidebar-primary-foreground: 35 30% 98%;
+    --sidebar-accent: 45 55% 85%;
+    --sidebar-accent-foreground: 25 30% 20%;
+    --sidebar-border: 30 20% 88%;
+    --sidebar-ring: 15 65% 52%;
+
+    --warning: 40 90% 50%;
+    --warning-foreground: 40 90% 10%;
+    --success: 145 50% 42%;
+    --success-foreground: 145 10% 98%;
+    --chart-1: 15 65% 52%;
+    --chart-2: 45 55% 65%;
+    --chart-3: 145 30% 45%;
+    --chart-4: 200 40% 55%;
+    --chart-5: 280 30% 55%;
+  }
+
+  .dark {
+    --background: 25 25% 10%;
+    --foreground: 35 20% 92%;
+
+    --card: 25 25% 13%;
+    --card-foreground: 35 20% 92%;
+
+    --popover: 25 25% 13%;
+    --popover-foreground: 35 20% 92%;
+
+    --primary: 15 65% 55%;
+    --primary-foreground: 25 30% 10%;
+
+    --secondary: 35 20% 20%;
+    --secondary-foreground: 35 20% 92%;
+
+    --muted: 25 15% 18%;
+    --muted-foreground: 35 15% 60%;
+
+    --accent: 145 30% 40%;
+    --accent-foreground: 145 10% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 25 15% 20%;
+    --input: 25 15% 20%;
+    --ring: 15 65% 55%;
+
+    --sidebar-background: 25 25% 10%;
+    --sidebar-foreground: 35 20% 92%;
+    --sidebar-primary: 15 65% 55%;
+    --sidebar-primary-foreground: 25 30% 10%;
+    --sidebar-accent: 35 20% 20%;
+    --sidebar-accent-foreground: 35 20% 92%;
+    --sidebar-border: 25 15% 20%;
+    --sidebar-ring: 15 65% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Nunito', system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5;
+  }
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 8px);
+  }
+}
