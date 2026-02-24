@@ -55,9 +55,11 @@ const Index = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-8">
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-          <p className="text-muted-foreground text-sm">Cargando datos...</p>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="animate-spin h-10 w-10 border-[3px] border-primary/30 border-t-primary rounded-full" />
+          </div>
+          <p className="text-muted-foreground text-sm font-medium">Cargando...</p>
         </div>
       </div>
     );
@@ -78,29 +80,31 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="glass sticky top-0 z-10 border-b">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Target className="h-6 w-6 text-primary" />
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-xl gradient-primary">
+              <Target className="h-5 w-5 text-primary-foreground" />
+            </div>
             <div>
-              <h1 className="text-lg font-extrabold leading-tight">Sheriff de Gastos</h1>
-              <p className="text-[11px] text-muted-foreground">Kevin & Angeles</p>
+              <h1 className="text-lg font-extrabold leading-tight tracking-tight">Sheriff de Gastos</h1>
+              <p className="text-[10px] text-muted-foreground font-medium tracking-wide">Kevin & Angeles</p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <img src={sheriffBoy} alt="Kevin" className="w-9 h-9 rounded-full ring-2 ring-primary/30 cursor-pointer" onClick={() => setAvatarViewer(sheriffBoy)} />
-            <img src={sheriffGirl} alt="Angeles" className="w-9 h-9 rounded-full ring-2 ring-accent/30 cursor-pointer" onClick={() => setAvatarViewer(sheriffGirl)} />
+          <div className="flex items-center gap-2">
+            <img src={sheriffBoy} alt="Kevin" className="w-9 h-9 rounded-full ring-2 ring-primary/20 cursor-pointer transition-transform hover:scale-105" onClick={() => setAvatarViewer(sheriffBoy)} />
+            <img src={sheriffGirl} alt="Angeles" className="w-9 h-9 rounded-full ring-2 ring-accent/20 cursor-pointer transition-transform hover:scale-105" onClick={() => setAvatarViewer(sheriffGirl)} />
           </div>
         </div>
       </header>
 
       {/* Content */}
       <main
-        className="flex-1 max-w-2xl mx-auto px-4 py-4 pb-20 w-full"
+        className="flex-1 max-w-2xl mx-auto px-4 py-5 pb-24 w-full"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="transition-opacity duration-200">
+        <div className="transition-all duration-300 ease-out">
           {activeTab === 'add' && <ExpenseForm onExpenseAdded={addExpense} />}
           {activeTab === 'dashboard' && <Dashboard expenses={expenses} onUpdateExpense={updateExpense} onDeleteExpense={removeExpense} />}
           {activeTab === 'income' && <IncomeSection incomes={incomes} expenses={expenses} onAddIncome={addIncome} onRemoveIncome={removeIncome} />}
@@ -110,18 +114,21 @@ const Index = () => {
       </main>
 
       {/* Bottom tab bar - iOS style */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t safe-area-pb z-20">
+      <nav className="fixed bottom-0 left-0 right-0 glass border-t safe-area-pb z-20">
         <div className="max-w-2xl mx-auto flex">
           {TABS.map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2 pt-2.5 transition-colors ${
-                activeTab === key ? 'text-primary' : 'text-muted-foreground'
+              className={`flex-1 flex flex-col items-center gap-0.5 py-2 pt-2.5 transition-all duration-200 ${
+                activeTab === key ? 'text-primary scale-105' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <Icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">{label}</span>
+              <Icon className={`h-5 w-5 transition-all ${activeTab === key ? 'drop-shadow-sm' : ''}`} strokeWidth={activeTab === key ? 2.5 : 1.8} />
+              <span className={`text-[10px] ${activeTab === key ? 'font-bold' : 'font-medium'}`}>{label}</span>
+              {activeTab === key && (
+                <span className="w-1 h-1 rounded-full bg-primary mt-0.5" />
+              )}
             </button>
           ))}
         </div>
@@ -129,7 +136,7 @@ const Index = () => {
 
       {/* Avatar viewer */}
       <Dialog open={!!avatarViewer} onOpenChange={() => setAvatarViewer(null)}>
-        <DialogContent className="max-w-xs p-2">
+        <DialogContent className="max-w-xs p-2 rounded-2xl">
           {avatarViewer && <img src={avatarViewer} alt="Avatar" className="w-full rounded-xl" />}
         </DialogContent>
       </Dialog>

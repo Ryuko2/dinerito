@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Expense, CATEGORIES, CARDS, Person, PERSON_NAMES, PaymentType } from '@/lib/types';
 import CategoryIcon from '@/components/CategoryIcon';
+import CardBrandIcon from '@/components/CardBrandIcon';
 import { toast } from 'sonner';
 
 interface Props {
@@ -27,7 +28,6 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
   const [paymentType, setPaymentType] = useState<PaymentType>('');
   const [saving, setSaving] = useState(false);
 
-  // Sync state when expense changes
   const prevId = useState<string | null>(null);
   if (expense && expense.id !== prevId[0]) {
     prevId[1](expense.id);
@@ -115,7 +115,14 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
               <Select value={card} onValueChange={setCard}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {CARDS.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                  {CARDS.map(c => (
+                    <SelectItem key={c.value} value={c.value}>
+                      <span className="flex items-center gap-2">
+                        <CardBrandIcon card={c.value} className="h-4 w-4" />
+                        {c.label}
+                      </span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -148,10 +155,10 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
             <Input value={brand} onChange={e => setBrand(e.target.value)} />
           </div>
           <div className="flex gap-2 pt-2">
-            <Button onClick={handleSave} className="flex-1" disabled={saving}>
+            <Button onClick={handleSave} className="flex-1 rounded-xl" disabled={saving}>
               {saving ? 'Guardando...' : 'Guardar'}
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>Eliminar</Button>
+            <Button variant="destructive" onClick={handleDelete} className="rounded-xl">Eliminar</Button>
           </div>
         </div>
       </DialogContent>
