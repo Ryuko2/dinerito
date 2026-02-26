@@ -1,0 +1,18 @@
+{
+  "name": "Sheriff de Gastos",
+  "short_name": "Sheriff",
+  "description": "Rastreador de gastos en pareja con estilo vaquero",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f0eb",
+  "theme_color": "#d4733a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

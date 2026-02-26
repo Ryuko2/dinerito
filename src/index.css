@@ -97,6 +97,12 @@
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    height: -webkit-fill-available;
+    overflow: hidden;
   }
 
   body {
@@ -104,6 +110,10 @@
     font-family: 'Nunito', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overscroll-behavior: none;
+    padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) 0 env(safe-area-inset-left, 0);
   }
 
   /* Smooth iOS-style scrolling */
@@ -112,9 +122,15 @@
     scroll-behavior: smooth;
   }
 
-  /* Better input styling for iOS */
+  /* Better input styling for iOS – prevents auto-zoom on focus */
   input, select, textarea {
-    font-size: 16px !important; /* prevents zoom on iOS */
+    font-size: 16px !important;
+    touch-action: manipulation;
+  }
+
+  /* Remove 300ms tap delay on interactive elements */
+  a, button, [role="button"], [tabindex] {
+    touch-action: manipulation;
   }
 }
 
@@ -133,5 +149,11 @@
   }
   .shadow-soft {
     box-shadow: 0 4px 24px -4px hsl(var(--foreground) / 0.08), 0 1px 2px hsl(var(--foreground) / 0.04);
+  }
+}
+
+@supports (padding: max(0px)) {
+  .safe-area-pb {
+    padding-bottom: max(env(safe-area-inset-bottom, 8px), 8px);
   }
 }

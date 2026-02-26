@@ -282,7 +282,7 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
               {filtered.slice().reverse().map(e => (
                 <div
                   key={e.id}
-                  className="flex items-center justify-between p-3 rounded-xl bg-muted/40 cursor-pointer hover:bg-muted/70 transition-all active:scale-[0.98] group"
+                  className="flex items-center justify-between p-3 rounded-xl bg-muted/40 cursor-pointer hover:bg-muted/70 transition-colors active:bg-muted/90 select-none"
                   onClick={() => setEditExpense(e)}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">

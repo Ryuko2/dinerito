@@ -123,7 +123,7 @@ export default function IncomeSection({ incomes, expenses, onAddIncome, onRemove
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">Historial</CardTitle></CardHeader>
           <CardContent>
-            <div className="space-y-1.5 max-h-[40vh] overflow-y-auto">
+            <div className="space-y-1.5 max-h-[40vh] overflow-y-auto overscroll-contain">
               {incomes.slice().reverse().map(i => (
                 <div key={i.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-2 min-w-0">

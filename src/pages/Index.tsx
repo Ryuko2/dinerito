@@ -42,6 +42,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<TabKey>('add');
   const [avatarViewer, setAvatarViewer] = useState<string | null>(null);
   const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
 
   // One-time migration: recover data from old localStorage keys
   useEffect(() => {
@@ -138,15 +139,28 @@ const Index = () => {
 
   const tabIndex = TABS.findIndex(t => t.key === activeTab);
 
-  const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    const isInteractiveElement = target.closest('input, textarea, select, button, a, [role="button"], [data-radix-collection-item]');
+    if (isInteractiveElement) {
+      touchStartX.current = null;
+      touchStartY.current = null;
+      return;
+    }
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return;
-    const diff = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(diff) > 60) {
-      const next = diff < 0 ? Math.min(tabIndex + 1, TABS.length - 1) : Math.max(tabIndex - 1, 0);
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const diffX = e.changedTouches[0].clientX - touchStartX.current;
+    const diffY = e.changedTouches[0].clientY - touchStartY.current;
+    const isHorizontalSwipe = Math.abs(diffX) > 60 && Math.abs(diffX) > Math.abs(diffY) * 1.5;
+    if (isHorizontalSwipe) {
+      const next = diffX < 0 ? Math.min(tabIndex + 1, TABS.length - 1) : Math.max(tabIndex - 1, 0);
       setActiveTab(TABS[next].key);
     }
     touchStartX.current = null;
+    touchStartY.current = null;
   };
 
   if (loading) {
@@ -176,7 +190,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen min-h-[-webkit-fill-available] bg-background flex flex-col overflow-x-hidden">
       {error && hasAnyData && (
         <div className="bg-amber-500/15 text-amber-800 dark:text-amber-200 text-center py-1.5 text-xs font-medium px-4">
           Mostrando datos guardados. Revisa tu conexión para sincronizar con la nube.
@@ -234,17 +248,17 @@ const Index = () => {
       </main>
 
       {/* Bottom tab bar - iOS style */}
-      <nav className="fixed bottom-0 left-0 right-0 glass border-t safe-area-pb z-20">
+      <nav className="fixed bottom-0 left-0 right-0 glass border-t safe-area-pb z-20" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 8px)' }}>
         <div className="max-w-2xl mx-auto flex">
           {TABS.map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2 pt-2.5 transition-all duration-200 ${
-                activeTab === key ? 'text-primary scale-105' : 'text-muted-foreground hover:text-foreground'
+              className={`flex-1 flex flex-col items-center gap-0.5 py-2 pt-2.5 transition-colors duration-150 select-none ${
+                activeTab === key ? 'text-primary' : 'text-muted-foreground active:text-foreground'
               }`}
             >
-              <Icon className={`h-5 w-5 transition-all ${activeTab === key ? 'drop-shadow-sm' : ''}`} strokeWidth={activeTab === key ? 2.5 : 1.8} />
+              <Icon className={`h-5 w-5 transition-colors ${activeTab === key ? 'drop-shadow-sm' : ''}`} strokeWidth={activeTab === key ? 2.5 : 1.8} />
               <span className={`text-[10px] ${activeTab === key ? 'font-bold' : 'font-medium'}`}>{label}</span>
               {activeTab === key && (
                 <span className="w-1 h-1 rounded-full bg-primary mt-0.5" />

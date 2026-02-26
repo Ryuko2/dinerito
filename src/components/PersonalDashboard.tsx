@@ -134,9 +134,9 @@ export default function PersonalDashboard({ person, expenses, onBack, onUpdateEx
       <Card className="border-0 shadow-md">
         <CardHeader className="pb-2"><CardTitle className="text-sm">Gastos</CardTitle></CardHeader>
         <CardContent>
-          <div className="space-y-1.5 max-h-[50vh] overflow-y-auto">
+          <div className="space-y-1.5 max-h-[50vh] overflow-y-auto overscroll-contain">
             {filtered.slice().reverse().map(e => (
-              <div key={e.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/40 cursor-pointer hover:bg-muted/70 transition-all active:scale-[0.98]" onClick={() => setEditExpense(e)}>
+              <div key={e.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/40 cursor-pointer hover:bg-muted/70 transition-all active:bg-muted/90 select-none" onClick={() => setEditExpense(e)}>
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
                     <CategoryIcon category={e.category} className="h-4 w-4 text-primary" />
