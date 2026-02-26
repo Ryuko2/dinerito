@@ -65,7 +65,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
         brand: brand.trim(),
         paidBy,
         date,
-        paymentType: paymentType || undefined,
+        ...(paymentType && { paymentType }),
       });
       toast.success('Gasto actualizado.');
       onOpenChange(false);

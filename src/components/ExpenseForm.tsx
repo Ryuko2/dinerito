@@ -58,8 +58,8 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
         brand: brand.trim().slice(0, 100),
         paidBy: paidBy as Person,
         date,
-        paymentType: paymentType || undefined,
-        thirdPartyName: isThirdParty && thirdPartyName.trim() ? thirdPartyName.trim() : undefined,
+        ...(paymentType && { paymentType }),
+        ...(isThirdParty && thirdPartyName.trim() && { thirdPartyName: thirdPartyName.trim() }),
       });
       toast.success('Gasto registrado.');
       setAmount('');
