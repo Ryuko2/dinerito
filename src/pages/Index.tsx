@@ -29,6 +29,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import GastometerSection from '@/components/GastometerSection';
 import { useI18n } from '@/lib/i18n';
+import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 
 const TABS = [
   { key: 'add', label: 'Agregar', labelEn: 'Add', icon: PlusCircle },
@@ -43,6 +44,7 @@ type TabKey = typeof TABS[number]['key'];
 
 const Index = () => {
   const { locale, setLocale, t } = useI18n();
+  const isOnline = useConnectionStatus();
   const [activeTab, setActiveTab] = useState<TabKey>('add');
   const [avatarViewer, setAvatarViewer] = useState<string | null>(null);
   const touchStartX = useRef<number | null>(null);
@@ -195,7 +197,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen min-h-[-webkit-fill-available] bg-background flex flex-col overflow-x-hidden">
-      {error && hasAnyData && (
+      {!isOnline && (
+        <div className="bg-destructive/15 text-destructive text-center py-1.5 text-xs font-medium px-4 flex items-center justify-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-destructive animate-pulse shrink-0" />
+          Sin conexión — los datos se sincronizarán cuando vuelva la conexión
+        </div>
+      )}
+      {isOnline && error && hasAnyData && (
         <div className="bg-amber-500/15 text-amber-800 dark:text-amber-200 text-center py-1.5 text-xs font-medium px-4">
           Mostrando datos guardados. Revisa tu conexión para sincronizar con la nube.
         </div>

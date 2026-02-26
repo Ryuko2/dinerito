@@ -8,6 +8,12 @@
 - Data is written via `addDoc`, `updateDoc`, `deleteDoc` — never `setDoc` on initialization.
 - **GitHub deploys only affect frontend code** — they do NOT touch the database. Data persists across deployments.
 
+## Connection Reliability
+
+- **Offline persistence**: Firestore uses `persistentLocalCache` with `persistentMultipleTabManager` so data works offline and syncs when connection returns.
+- **Auto-retry**: `onSnapshot` listeners retry every 3 seconds on WebChannel/connection errors.
+- **Quotas**: If you see `ERR_CONNECTION_CLOSED` or timeouts, verify: (1) Firebase Spark plan hasn't hit daily read/write limits, (2) Firestore security rules allow reads, (3) `VITE_FIREBASE_PROJECT_ID` matches the correct project.
+
 ## localStorage Role
 
 - **Cache/fallback only**: localStorage holds a copy of Firestore data for:

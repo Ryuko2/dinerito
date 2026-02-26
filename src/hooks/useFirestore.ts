@@ -2,7 +2,7 @@
  * WARNING: Changing collection names or field names here will break existing user data.
  * Always write a migration before deploying.
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   collection,
   onSnapshot,
@@ -49,13 +49,21 @@ export function useCollection<T extends DocumentData>(
   const [data, setData] = useState<(T & { id: string })[]>(initialData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    const colRef = collection(db, collectionName);
-    const q = constraints.length > 0 ? query(colRef, ...constraints) : colRef;
-    const unsub = onSnapshot(
-      q,
-      (snapshot) => {
+    mountedRef.current = true;
+    let unsub: (() => void) | null = null;
+    const RETRY_DELAY_MS = 3000;
+
+    function setupListener() {
+      const colRef = collection(db, collectionName);
+      const q = constraints.length > 0 ? query(colRef, ...constraints) : colRef;
+      unsub = onSnapshot(
+        q,
+        (snapshot) => {
+          if (!mountedRef.current) return;
         const docs = snapshot.docs.map((d) => {
           const raw = d.data() as Record<string, unknown>;
           const base = {
@@ -71,24 +79,39 @@ export function useCollection<T extends DocumentData>(
           const normalized = normalizeDocument(collectionName, base, d.id);
           return normalized as unknown as T & { id: string };
         });
-        setData(docs);
-        setError(null);
-        setLoading(false);
-        // Persist to localStorage on every Firestore update
-        if (storageKey) saveToLocal(storageKey, docs);
-      },
-      (err) => {
-        console.error(`Error en ${collectionName}:`, err);
-        setError(err);
-        setLoading(false);
-        // On Firestore error: keep localStorage data (already in state from init)
-        if (storageKey) {
-          const local = loadFromLocal<T & { id: string }>(storageKey);
-          if (local.length > 0) setData(local as (T & { id: string })[]);
+          setData(docs);
+          setError(null);
+          setLoading(false);
+          if (storageKey) saveToLocal(storageKey, docs);
+        },
+        (err) => {
+          console.error(`[Firestore] Error in ${collectionName}:`, err);
+          if (!mountedRef.current) return;
+          setError(err);
+          setLoading(false);
+          if (storageKey) {
+            const local = loadFromLocal<T & { id: string }>(storageKey);
+            if (local.length > 0) setData(local as (T & { id: string })[]);
+          }
+          unsub?.();
+          retryTimeoutRef.current = setTimeout(() => {
+            retryTimeoutRef.current = null;
+            if (mountedRef.current) setupListener();
+          }, RETRY_DELAY_MS);
         }
+      );
+    }
+
+    setupListener();
+
+    return () => {
+      mountedRef.current = false;
+      unsub?.();
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
       }
-    );
-    return () => unsub();
+    };
   }, [collectionName, storageKey]);
 
   const add = async (item: Omit<T, "id">) => {
