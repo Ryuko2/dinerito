@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Expense, CATEGORIES, CARDS, Person, PERSON_NAMES, PaymentType } from '@/lib/types';
 import CategoryIcon from '@/components/CategoryIcon';
 import CardBrandIcon from '@/components/CardBrandIcon';
+import { CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Props {
@@ -38,6 +39,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
   const [paymentType, setPaymentType] = useState<PaymentType>('');
   const [saving, setSaving] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
   const prevId = useState<string | null>(null);
   if (expense && expense.id !== prevId[0]) {
@@ -67,13 +69,17 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
         date,
         ...(paymentType && { paymentType }),
       });
-      toast.success('Gasto actualizado.');
-      onOpenChange(false);
+      setSuccessDialogOpen(true);
     } catch {
       toast.error('Error al actualizar.');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSuccessContinue = () => {
+    setSuccessDialogOpen(false);
+    onOpenChange(false);
   };
 
   const handleDelete = async () => {
@@ -185,6 +191,29 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex flex-col items-center gap-3 pt-2">
+              <div className="p-3 rounded-full bg-accent/15">
+                <CheckCircle2 className="h-10 w-10 text-accent" />
+              </div>
+              <AlertDialogTitle className="text-center text-lg">
+                Gasto guardado correctamente
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                Los cambios han sido guardados exitosamente.
+              </AlertDialogDescription>
+            </div>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center">
+            <AlertDialogAction onClick={handleSuccessContinue} className="w-full rounded-xl h-11 text-base font-bold">
+              Continuar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

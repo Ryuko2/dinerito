@@ -5,8 +5,17 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 import { CATEGORIES, CARDS, Person, PERSON_NAMES, PaymentType } from '@/lib/types';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import CategoryIcon from '@/components/CategoryIcon';
 import CardBrandIcon from '@/components/CardBrandIcon';
@@ -41,6 +50,19 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
   const [isThirdParty, setIsThirdParty] = useState(false);
   const [thirdPartyName, setThirdPartyName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+
+  const resetForm = () => {
+    setAmount('');
+    setDescription('');
+    setCategory('');
+    setCard('');
+    setBrand('');
+    setPaidBy('');
+    setPaymentType('');
+    setIsThirdParty(false);
+    setThirdPartyName('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,22 +83,18 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
         ...(paymentType && { paymentType }),
         ...(isThirdParty && thirdPartyName.trim() && { thirdPartyName: thirdPartyName.trim() }),
       });
-      toast.success('Gasto registrado.');
-      setAmount('');
-      setDescription('');
-      setCategory('');
-      setCard('');
-      setBrand('');
-      setPaidBy('');
-      setPaymentType('');
-      setIsThirdParty(false);
-      setThirdPartyName('');
+      setSuccessDialogOpen(true);
     } catch (err) {
       console.error(err);
       toast.error('Error al guardar.');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSuccessContinue = () => {
+    setSuccessDialogOpen(false);
+    resetForm();
   };
 
   return (
@@ -213,6 +231,29 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
           </Button>
         </form>
       </CardContent>
+
+      <AlertDialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex flex-col items-center gap-3 pt-2">
+              <div className="p-3 rounded-full bg-accent/15">
+                <CheckCircle2 className="h-10 w-10 text-accent" />
+              </div>
+              <AlertDialogTitle className="text-center text-lg">
+                Gasto guardado correctamente
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                Tu gasto ha sido registrado exitosamente.
+              </AlertDialogDescription>
+            </div>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center">
+            <AlertDialogAction onClick={handleSuccessContinue} className="w-full rounded-xl h-11 text-base font-bold">
+              Continuar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
