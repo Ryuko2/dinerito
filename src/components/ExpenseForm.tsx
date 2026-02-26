@@ -48,9 +48,15 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentType, setPaymentType] = useState<PaymentType>('');
   const [isThirdParty, setIsThirdParty] = useState(false);
-  const [thirdPartyName, setThirdPartyName] = useState('');
+  const [thirdPartySelection, setThirdPartySelection] = useState<'kevin' | 'angeles' | 'otro' | ''>('');
+  const [thirdPartyOtherName, setThirdPartyOtherName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+
+  const thirdPartyName = thirdPartySelection === 'kevin' ? PERSON_NAMES.boyfriend
+    : thirdPartySelection === 'angeles' ? PERSON_NAMES.girlfriend
+    : thirdPartySelection === 'otro' ? thirdPartyOtherName.trim()
+    : '';
 
   const resetForm = () => {
     setAmount('');
@@ -61,7 +67,8 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
     setPaidBy('');
     setPaymentType('');
     setIsThirdParty(false);
-    setThirdPartyName('');
+    setThirdPartySelection('');
+    setThirdPartyOtherName('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,9 +77,17 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
       toast.error('Completa los campos obligatorios.');
       return;
     }
+    if (isThirdParty && thirdPartySelection === 'otro' && !thirdPartyOtherName.trim()) {
+      toast.error('Selecciona la persona o escribe el nombre.');
+      return;
+    }
+    if (isThirdParty && !thirdPartySelection) {
+      toast.error('Selecciona la persona o escribe el nombre.');
+      return;
+    }
     setSubmitting(true);
     try {
-      await onExpenseAdded({
+      const savePromise = onExpenseAdded({
         amount: parseFloat(amount),
         description: description.trim().slice(0, 200),
         category,
@@ -81,8 +96,13 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
         paidBy: paidBy as Person,
         date,
         ...(paymentType && { paymentType }),
-        ...(isThirdParty && thirdPartyName.trim() && { thirdPartyName: thirdPartyName.trim() }),
+        ...(isThirdParty && thirdPartyName && { thirdPartyName }),
       });
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout')), 15000)
+      );
+      await Promise.race([savePromise, timeoutPromise]);
+      setSubmitting(false);
       setSuccessDialogOpen(true);
     } catch (err) {
       console.error(err);
@@ -217,12 +237,33 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
           {/* Third party */}
           <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-border/50">
             <Label className="text-sm">Gasto de alguien mas</Label>
-            <Switch checked={isThirdParty} onCheckedChange={setIsThirdParty} />
+            <Switch checked={isThirdParty} onCheckedChange={(checked) => { setIsThirdParty(checked); if (!checked) { setThirdPartySelection(''); setThirdPartyOtherName(''); } }} />
           </div>
           {isThirdParty && (
-            <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-200">
-              <Label className="text-xs">Nombre de la persona</Label>
-              <Input placeholder="Nombre" value={thirdPartyName} onChange={e => setThirdPartyName(e.target.value)} maxLength={50} />
+            <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
+              <Label className="text-xs">¿Para quién es el gasto?</Label>
+              <div className="flex gap-2 flex-wrap">
+                {([
+                  { value: 'kevin' as const, img: sheriffBoy, label: PERSON_NAMES.boyfriend },
+                  { value: 'angeles' as const, img: sheriffGirl, label: PERSON_NAMES.girlfriend },
+                  { value: 'otro' as const, label: 'Otro' },
+                ]).map(({ value, img, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setThirdPartySelection(value)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition-all text-sm font-medium ${
+                      thirdPartySelection === value ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    {img && <img src={img} alt="" className="w-6 h-6 rounded-full" />}
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {thirdPartySelection === 'otro' && (
+                <Input placeholder="Nombre de la persona" value={thirdPartyOtherName} onChange={e => setThirdPartyOtherName(e.target.value)} maxLength={50} className="mt-1" />
+              )}
             </div>
           )}
 

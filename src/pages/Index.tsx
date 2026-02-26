@@ -14,7 +14,7 @@ import {
 import { useCollection } from '@/hooks/useFirestore';
 import { Expense, SavingsGoal, Income, Budget } from '@/lib/types';
 import { orderBy } from 'firebase/firestore';
-import { BarChart3, PlusCircle, Target, DollarSign, PieChart, Settings2, Download, Upload } from 'lucide-react';
+import { BarChart3, PlusCircle, Target, DollarSign, PieChart, Settings2, Download, Upload, Thermometer, Languages } from 'lucide-react';
 import { toast } from 'sonner';
 import sheriffBoy from '@/assets/sheriff-boy.png';
 import sheriffGirl from '@/assets/sheriff-girl.png';
@@ -27,18 +27,22 @@ import { runLegacyMigration } from '@/lib/migrateLegacy';
 import { sanitizeForFirestore } from '@/lib/utils';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import GastometerSection from '@/components/GastometerSection';
+import { useI18n } from '@/lib/i18n';
 
 const TABS = [
-  { key: 'add', label: 'Agregar', icon: PlusCircle },
-  { key: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-  { key: 'income', label: 'Ingresos', icon: DollarSign },
-  { key: 'budgets', label: 'Presupuestos', icon: PieChart },
-  { key: 'goals', label: 'Metas', icon: Target },
+  { key: 'add', label: 'Agregar', labelEn: 'Add', icon: PlusCircle },
+  { key: 'dashboard', label: 'Dashboard', labelEn: 'Dashboard', icon: BarChart3 },
+  { key: 'gastometer', label: 'Gastómetro', labelEn: 'Gastometer', icon: Thermometer },
+  { key: 'income', label: 'Ingresos', labelEn: 'Income', icon: DollarSign },
+  { key: 'budgets', label: 'Presupuestos', labelEn: 'Budgets', icon: PieChart },
+  { key: 'goals', label: 'Metas', labelEn: 'Goals', icon: Target },
 ] as const;
 
 type TabKey = typeof TABS[number]['key'];
 
 const Index = () => {
+  const { locale, setLocale, t } = useI18n();
   const [activeTab, setActiveTab] = useState<TabKey>('add');
   const [avatarViewer, setAvatarViewer] = useState<string | null>(null);
   const touchStartX = useRef<number | null>(null);
@@ -217,11 +221,14 @@ const Index = () => {
               </PopoverTrigger>
               <PopoverContent className="w-56 p-2" align="end">
                 <div className="space-y-1">
+                  <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => setLocale(locale === 'es' ? 'en' : 'es')}>
+                    <Languages className="h-4 w-4" /> {locale === 'es' ? 'English' : 'Español'}
+                  </Button>
                   <Button variant="ghost" className="w-full justify-start gap-2" onClick={handleExport}>
-                    <Download className="h-4 w-4" /> Exportar mis datos
+                    <Download className="h-4 w-4" /> {t('exportData')}
                   </Button>
                   <Button variant="ghost" className="w-full justify-start gap-2" onClick={handleImport}>
-                    <Upload className="h-4 w-4" /> Importar datos
+                    <Upload className="h-4 w-4" /> {t('importData')}
                   </Button>
                 </div>
               </PopoverContent>
@@ -241,6 +248,7 @@ const Index = () => {
         <div className="transition-all duration-300 ease-out">
           {activeTab === 'add' && <ExpenseForm onExpenseAdded={addExpense} />}
           {activeTab === 'dashboard' && <Dashboard expenses={expenses} onUpdateExpense={updateExpense} onDeleteExpense={removeExpense} />}
+          {activeTab === 'gastometer' && <GastometerSection expenses={expenses} incomes={incomes} />}
           {activeTab === 'income' && <IncomeSection incomes={incomes} expenses={expenses} onAddIncome={addIncome} onRemoveIncome={removeIncome} />}
           {activeTab === 'budgets' && <BudgetSection budgets={budgets} expenses={expenses} onAddBudget={addBudget} onRemoveBudget={removeBudget} />}
           {activeTab === 'goals' && <GoalsSection goals={goals} onAddGoal={addGoal} onUpdateGoal={updateGoal} onRemoveGoal={removeGoal} />}
@@ -250,7 +258,7 @@ const Index = () => {
       {/* Bottom tab bar - iOS style */}
       <nav className="fixed bottom-0 left-0 right-0 glass border-t safe-area-pb z-20" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 8px)' }}>
         <div className="max-w-2xl mx-auto flex">
-          {TABS.map(({ key, label, icon: Icon }) => (
+          {TABS.map(({ key, label, labelEn, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
@@ -259,7 +267,7 @@ const Index = () => {
               }`}
             >
               <Icon className={`h-5 w-5 transition-colors ${activeTab === key ? 'drop-shadow-sm' : ''}`} strokeWidth={activeTab === key ? 2.5 : 1.8} />
-              <span className={`text-[10px] ${activeTab === key ? 'font-bold' : 'font-medium'}`}>{label}</span>
+              <span className={`text-[10px] ${activeTab === key ? 'font-bold' : 'font-medium'}`}>{locale === 'es' ? label : labelEn}</span>
               {activeTab === key && (
                 <span className="w-1 h-1 rounded-full bg-primary mt-0.5" />
               )}

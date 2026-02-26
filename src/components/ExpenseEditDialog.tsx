@@ -37,6 +37,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
   const [paidBy, setPaidBy] = useState<Person>('boyfriend');
   const [date, setDate] = useState('');
   const [paymentType, setPaymentType] = useState<PaymentType>('');
+  const [thirdPartyName, setThirdPartyName] = useState('');
   const [saving, setSaving] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
@@ -52,6 +53,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
     setPaidBy(expense.paidBy);
     setDate(expense.date);
     setPaymentType(expense.paymentType || '');
+    setThirdPartyName(expense.thirdPartyName || '');
   }
 
   if (!expense) return null;
@@ -68,6 +70,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
         paidBy,
         date,
         ...(paymentType && { paymentType }),
+        ...(thirdPartyName.trim() && { thirdPartyName: thirdPartyName.trim() }),
       });
       setSuccessDialogOpen(true);
     } catch {
@@ -171,6 +174,10 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
           <div className="space-y-1">
             <Label className="text-xs">Marca / Tienda</Label>
             <Input value={brand} onChange={e => setBrand(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Gasto de alguien más (opcional)</Label>
+            <Input placeholder="Nombre" value={thirdPartyName} onChange={e => setThirdPartyName(e.target.value)} maxLength={50} />
           </div>
           <div className="flex gap-2 pt-2">
             <Button onClick={handleSave} className="flex-1 rounded-xl" disabled={saving}>

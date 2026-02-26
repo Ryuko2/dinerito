@@ -52,6 +52,13 @@
     --chart-3: 145 30% 45%;
     --chart-4: 200 40% 55%;
     --chart-5: 280 30% 55%;
+
+    --thermo-cool: 200 80% 55%;
+    --thermo-warm: 45 90% 55%;
+    --thermo-hot: 15 90% 50%;
+    --thermo-danger: 0 85% 45%;
+    --thermo-hell: 0 90% 30%;
+    --thermo-glow: 0 100% 50%;
   }
 
   .dark {
@@ -91,6 +98,13 @@
     --sidebar-accent-foreground: 35 20% 92%;
     --sidebar-border: 25 15% 20%;
     --sidebar-ring: 15 65% 55%;
+
+    --thermo-cool: 200 80% 55%;
+    --thermo-warm: 45 90% 55%;
+    --thermo-hot: 15 90% 50%;
+    --thermo-danger: 0 85% 45%;
+    --thermo-hell: 0 90% 30%;
+    --thermo-glow: 0 100% 50%;
   }
 }
 
@@ -156,4 +170,37 @@
   .safe-area-pb {
     padding-bottom: max(env(safe-area-inset-bottom, 8px), 8px);
   }
+}
+
+@keyframes flame-flicker {
+  0%, 100% { opacity: 1; transform: scaleY(1) translateX(0); }
+  25% { opacity: 0.8; transform: scaleY(1.05) translateX(-1px); }
+  50% { opacity: 0.9; transform: scaleY(0.95) translateX(1px); }
+  75% { opacity: 0.85; transform: scaleY(1.02) translateX(-0.5px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px hsl(0 100% 50% / 0.3); }
+  50% { box-shadow: 0 0 40px hsl(0 100% 50% / 0.6), 0 0 80px hsl(0 100% 50% / 0.2); }
+}
+
+@keyframes hell-shake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-2px); }
+  20% { transform: translateX(2px); }
+  30% { transform: translateX(-1px); }
+  40% { transform: translateX(1px); }
+  50% { transform: translateX(0); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+.animate-hell-shake {
+  animation: hell-shake 0.5s ease-in-out;
+}
+
+.animate-flame-flicker {
+  animation: flame-flicker 1s ease-in-out infinite;
 }
