@@ -18,13 +18,6 @@ import {
 const DEFAULT_PROJECT_ID = "sheriff-de-gastos";
 const envProjectId = import.meta.env.VITE_FIREBASE_PROJECT_ID as string | undefined;
 const projectId = (envProjectId && envProjectId.trim()) || DEFAULT_PROJECT_ID;
-if (!envProjectId || !envProjectId.trim()) {
-  console.warn(
-    "[Firebase] VITE_FIREBASE_PROJECT_ID not set. Using fallback:",
-    DEFAULT_PROJECT_ID,
-    "- Add it to .env.local for production."
-  );
-}
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,

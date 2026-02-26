@@ -115,8 +115,8 @@
   }
 
   html {
+    height: 100%;
     height: -webkit-fill-available;
-    overflow: hidden;
   }
 
   body {
@@ -124,9 +124,9 @@
     font-family: 'Nunito', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    min-height: 100vh;
+    min-height: 100%;
     min-height: -webkit-fill-available;
-    overscroll-behavior: none;
+    overflow-x: hidden;
     padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) 0 env(safe-area-inset-left, 0);
   }
 

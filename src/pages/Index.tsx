@@ -196,7 +196,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen min-h-[-webkit-fill-available] bg-background flex flex-col overflow-x-hidden">
+    <div className="h-screen h-[100dvh] max-h-[100dvh] bg-background flex flex-col overflow-hidden">
       {!isOnline && (
         <div className="bg-destructive/15 text-destructive text-center py-1.5 text-xs font-medium px-4 flex items-center justify-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-destructive animate-pulse shrink-0" />
@@ -247,11 +247,12 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Content */}
+      {/* Content - scrollable area */}
       <main
-        className="flex-1 max-w-2xl mx-auto px-4 py-5 pb-24 w-full"
+        className="flex-1 min-h-0 max-w-2xl mx-auto px-4 py-5 pb-24 w-full overflow-y-auto overflow-x-hidden overscroll-contain"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
+        style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
       >
         <div className="transition-all duration-300 ease-out">
           {activeTab === 'add' && <ExpenseForm onExpenseAdded={addExpense} />}
