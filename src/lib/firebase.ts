@@ -15,11 +15,22 @@ import {
   persistentMultipleTabManager,
 } from "firebase/firestore";
 
+const DEFAULT_PROJECT_ID = "sheriff-de-gastos";
+const envProjectId = import.meta.env.VITE_FIREBASE_PROJECT_ID as string | undefined;
+const projectId = (envProjectId && envProjectId.trim()) || DEFAULT_PROJECT_ID;
+if (!envProjectId || !envProjectId.trim()) {
+  console.warn(
+    "[Firebase] VITE_FIREBASE_PROJECT_ID not set. Using fallback:",
+    DEFAULT_PROJECT_ID,
+    "- Add it to .env.local for production."
+  );
+}
+
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  projectId,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || `${projectId}.appspot.com`,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
@@ -40,11 +51,8 @@ try {
 
 export { db };
 
-// Validate config in development - missing env vars cause silent Firestore failures
-if (import.meta.env.DEV && !firebaseConfig.projectId) {
-  console.warn(
-    "[Firebase] Missing VITE_FIREBASE_* env vars. Create .env.local from .env.example and add your Firebase config."
-  );
+if (import.meta.env.DEV && !import.meta.env.VITE_FIREBASE_API_KEY) {
+  console.warn("[Firebase] Missing VITE_FIREBASE_API_KEY. Create .env.local from .env.example.");
 }
 
 export default app;
