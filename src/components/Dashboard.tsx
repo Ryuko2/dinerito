@@ -271,7 +271,7 @@ export default function Dashboard({ expenses, incomes, onUpdateExpense, onDelete
           </CardHeader>
           <CardContent>
             {byCategory.length === 0 ? (
-              <p className="text-copper/80 text-center py-8 text-sm">Tu libro está limpio, partner. Registra tu primer retiro para comenzar.</p>
+              <p className="text-copper/80 text-center py-8 text-sm">Tu libro está limpio, partner. Registra tu primer gasto para comenzar.</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
@@ -299,7 +299,7 @@ export default function Dashboard({ expenses, incomes, onUpdateExpense, onDelete
           </CardHeader>
           <CardContent>
             {byMonth.length === 0 ? (
-              <p className="text-copper/80 text-center py-8 text-sm">Tu libro está limpio, partner.</p>
+              <p className="text-copper/80 text-center py-8 text-sm">Tu libro está limpio, partner. Registra tu primer gasto para comenzar.</p>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={byMonth}>

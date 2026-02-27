@@ -172,10 +172,10 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#2C1A0E] flex items-center justify-center p-8">
+      <div className="min-h-screen bg-[#F5ECD7] flex items-center justify-center p-8">
         <div className="flex flex-col items-center gap-6 animate-in fade-in duration-700">
-          <div className="text-copper font-serif font-bold text-2xl tracking-[0.2em] uppercase text-center" style={{ fontFamily: "'Playfair Display', serif" }}>
-            First Bank of the West
+          <div className="text-copper font-serif font-bold text-2xl tracking-wide text-center" style={{ fontFamily: "'Playfair Display', serif" }}>
+            Dinerito
           </div>
           <div className="text-copper/80 animate-pulse">★</div>
           <div className="animate-spin h-8 w-8 border-2 border-copper/30 border-t-copper rounded-full" />

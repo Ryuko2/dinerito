@@ -118,7 +118,31 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
 
   // Step-specific setup (draggables, entrance animations)
   useEffect(() => {
-    if (!scope.current || !root.current || prefersReduced()) return;
+    if (!root.current) return;
+
+    // Re-create scope if missing (handles React strict mode double-invoke)
+    if (!scope.current) {
+      scope.current = createScope({ root: root.current }).add((self) => {
+        self.add('animateSuccess', () => {
+          if (prefersReduced()) return;
+          const chips = root.current?.querySelectorAll('.basket-chip-confirmed');
+          if (chips?.length) {
+            animate(chips, {
+              x: () => random(-150, 150),
+              y: () => random(-250, -60),
+              opacity: [1, 0],
+              rotate: () => random(-200, 200),
+              scale: [1, 0.5],
+              duration: () => random(400, 800),
+              ease: 'outExpo',
+              delay: stagger(35),
+            });
+          }
+        });
+      });
+    }
+
+    if (prefersReduced()) return;
 
     const rootEl = root.current;
 
@@ -632,22 +656,25 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
             </h2>
             <div className="flex flex-wrap gap-3">
               <div
-                className="draggable-chip flex items-center gap-2.5 px-5 py-3.5 rounded-xl border-2 border-copper bg-[#F5ECD7] font-serif text-base cursor-grab active:cursor-grabbing touch-action-none select-none min-h-[52px] min-w-[100px] shadow-[0_3px_0_#8B5E3C]"
+                className="draggable-chip flex items-center gap-2.5 px-5 py-3.5 rounded-xl border-2 border-copper bg-[#F5ECD7] font-serif text-base cursor-grab active:cursor-grabbing select-none min-h-[52px] min-w-[100px] shadow-[0_3px_0_#8B5E3C]"
                 data-value="kevin"
+                style={{ touchAction: 'none' }}
               >
                 <img src={sheriffBoy} alt="" className="w-8 h-8 rounded-full" />
                 <span>KEVIN</span>
               </div>
               <div
-                className="draggable-chip flex items-center gap-2.5 px-5 py-3.5 rounded-xl border-2 border-copper bg-[#F5ECD7] font-serif text-base cursor-grab active:cursor-grabbing touch-action-none select-none min-h-[52px] min-w-[100px] shadow-[0_3px_0_#8B5E3C]"
+                className="draggable-chip flex items-center gap-2.5 px-5 py-3.5 rounded-xl border-2 border-copper bg-[#F5ECD7] font-serif text-base cursor-grab active:cursor-grabbing select-none min-h-[52px] min-w-[100px] shadow-[0_3px_0_#8B5E3C]"
                 data-value="angeles"
+                style={{ touchAction: 'none' }}
               >
                 <img src={sheriffGirl} alt="" className="w-8 h-8 rounded-full" />
                 <span>ANGELES</span>
               </div>
               <div
-                className="draggable-chip flex items-center gap-2.5 px-5 py-3.5 rounded-xl border-2 border-copper bg-[#F5ECD7] font-serif text-base cursor-grab active:cursor-grabbing touch-action-none select-none min-h-[52px] min-w-[100px] shadow-[0_3px_0_#8B5E3C]"
+                className="draggable-chip flex items-center gap-2.5 px-5 py-3.5 rounded-xl border-2 border-copper bg-[#F5ECD7] font-serif text-base cursor-grab active:cursor-grabbing select-none min-h-[52px] min-w-[100px] shadow-[0_3px_0_#8B5E3C]"
                 data-value="otro"
+                style={{ touchAction: 'none' }}
               >
                 <span>👤</span>
                 <span>OTRO</span>
@@ -684,8 +711,9 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
               {CATEGORY_CHIPS.map((c) => (
                 <div
                   key={c.value}
-                  className="category-chip inline-flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-copper/40 bg-[#F5ECD7] font-serif cursor-grab active:cursor-grabbing touch-action-none select-none min-h-[52px] shadow-[0_2px_0_#8B5E3C]"
+                  className="category-chip inline-flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-copper/40 bg-[#F5ECD7] font-serif cursor-grab active:cursor-grabbing select-none min-h-[52px] shadow-[0_2px_0_#8B5E3C]"
                   data-value={c.value}
+                  style={{ touchAction: 'none' }}
                 >
                   <span>{c.emoji}</span>
                   <span>{c.value}</span>
@@ -705,8 +733,9 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
               {CARDS.map((c) => (
                 <div
                   key={c.value}
-                  className="bank-chip flex items-center gap-2.5 px-4 py-3 rounded-xl border border-copper bg-gradient-to-br from-[#2C1A0E] to-[#5C3A1E] text-[#F5ECD7] min-h-[52px] cursor-grab active:cursor-grabbing touch-action-none select-none"
+                  className="bank-chip flex items-center gap-2.5 px-4 py-3 rounded-xl border border-copper bg-gradient-to-br from-[#2C1A0E] to-[#5C3A1E] text-[#F5ECD7] min-h-[52px] cursor-grab active:cursor-grabbing select-none"
                   data-value={c.value}
+                  style={{ touchAction: 'none' }}
                 >
                   {BANK_LOGOS[c.value]?.startsWith('http') ? (
                     <img
@@ -733,15 +762,17 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
             </h2>
             <div className="flex gap-3">
               <div
-                className="payment-type-chip flex items-center gap-2 px-5 py-3.5 rounded-xl bg-copper text-[#F5ECD7] font-serif font-bold min-h-[52px] cursor-grab active:cursor-grabbing touch-action-none select-none"
+                className="payment-type-chip flex items-center gap-2 px-5 py-3.5 rounded-xl bg-copper text-[#F5ECD7] font-serif font-bold min-h-[52px] cursor-grab active:cursor-grabbing select-none"
                 data-value="credito"
+                style={{ touchAction: 'none' }}
               >
                 <span>💳</span>
                 <span>Crédito</span>
               </div>
               <div
-                className="payment-type-chip flex items-center gap-2 px-5 py-3.5 rounded-xl bg-[#8B5E3C] text-[#F5ECD7] font-serif font-bold min-h-[52px] cursor-grab active:cursor-grabbing touch-action-none select-none"
+                className="payment-type-chip flex items-center gap-2 px-5 py-3.5 rounded-xl bg-[#8B5E3C] text-[#F5ECD7] font-serif font-bold min-h-[52px] cursor-grab active:cursor-grabbing select-none"
                 data-value="debito"
+                style={{ touchAction: 'none' }}
               >
                 <span>🏧</span>
                 <span>Débito</span>
