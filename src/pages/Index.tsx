@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import ExpenseForm from '@/components/ExpenseForm';
+import RegistrarGasto from '@/components/RegistrarGasto';
 import Dashboard from '@/components/Dashboard';
 import GoalsSection from '@/components/GoalsSection';
 import IncomeSection from '@/components/IncomeSection';
@@ -33,7 +33,7 @@ import { useI18n } from '@/lib/i18n';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 
 const TABS = [
-  { key: 'add', label: 'Registrar Retiro', labelEn: 'Record Withdrawal', icon: PlusCircle },
+  { key: 'add', label: 'Registrar Gasto', labelEn: 'Register Expense', icon: PlusCircle },
   { key: 'dashboard', label: 'Mi Libro', labelEn: 'My Ledger', icon: BarChart3 },
   { key: 'gastometer', label: 'Gastómetro', labelEn: 'Gastometer', icon: Thermometer },
   { key: 'income', label: 'Depósitos', labelEn: 'Deposits', icon: DollarSign },
@@ -252,7 +252,12 @@ const Index = () => {
         style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
       >
         <div className="transition-all duration-300 ease-out">
-          {activeTab === 'add' && <ExpenseForm onExpenseAdded={addExpense} />}
+          {activeTab === 'add' && (
+            <RegistrarGasto
+              onExpenseAdded={addExpense}
+              onNavigateToLedger={() => setActiveTab('dashboard')}
+            />
+          )}
           {activeTab === 'dashboard' && <Dashboard expenses={expenses} incomes={incomes} onUpdateExpense={updateExpense} onDeleteExpense={removeExpense} />}
           {activeTab === 'gastometer' && <GastometerSection expenses={expenses} incomes={incomes} />}
           {activeTab === 'income' && <IncomeSection incomes={incomes} expenses={expenses} onAddIncome={addIncome} onRemoveIncome={removeIncome} />}

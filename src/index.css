@@ -278,6 +278,12 @@
   pointer-events: none;
   opacity: 0.04;
 }
+/* Registrar Gasto — basket drag-over glow */
+.expense-basket.is-drag-over {
+  box-shadow: 0 0 0 3px #C87941, 0 0 24px rgba(200, 121, 65, 0.45);
+  border-style: solid;
+}
+
 .bank-seal-watermark::before {
   content: "EST.";
   font-size: 4rem;

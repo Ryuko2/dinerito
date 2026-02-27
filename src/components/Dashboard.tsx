@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,7 @@ import WestDivider from '@/components/WestDivider';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
 import sheriffBoy from '@/assets/sheriff-boy.png';
 import sheriffGirl from '@/assets/sheriff-girl.png';
+import { animate, onScroll, stagger } from 'animejs';
 
 const COLORS = [
   'hsl(15, 65%, 52%)', 'hsl(45, 55%, 65%)', 'hsl(145, 30%, 45%)',
@@ -45,6 +46,30 @@ export default function Dashboard({ expenses, incomes, onUpdateExpense, onDelete
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
   const [personalPerson, setPersonalPerson] = useState<Person | null>(null);
   const [avatarViewer, setAvatarViewer] = useState<string | null>(null);
+  const expenseListRef = useRef<HTMLDivElement>(null);
+
+  // Scroll-triggered animation for expense cards (Mi Libro)
+  useEffect(() => {
+    if (personalPerson || filtered.length === 0 || !expenseListRef.current) return;
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const cards = expenseListRef.current.querySelectorAll('.expense-card');
+    if (cards.length === 0) return;
+
+    const anim = animate(cards, {
+      opacity: [0, 1],
+      translateY: [20, 0],
+      delay: stagger(60),
+      duration: 400,
+      ease: 'outExpo',
+      autoplay: onScroll({
+        enter: 'bottom top',
+        leave: 'top bottom',
+      }),
+    });
+
+    return () => anim?.revert?.();
+  }, [filtered.length, personalPerson]);
 
   const filtered = useMemo(() => {
     return expenses.filter(e => {
@@ -301,11 +326,11 @@ export default function Dashboard({ expenses, incomes, onUpdateExpense, onDelete
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-0 max-h-[60vh] overflow-y-auto overscroll-contain">
+            <div ref={expenseListRef} className="space-y-0 max-h-[60vh] overflow-y-auto overscroll-contain">
               {filtered.slice().reverse().map(e => (
                 <div
                   key={e.id}
-                  className="relative flex items-center justify-between p-3 rounded-none border-t-[3px] border-t-copper/50 border-t-double cursor-pointer hover:bg-copper/5 transition-colors active:bg-copper/10 select-none bg-white/60"
+                  className="expense-card relative flex items-center justify-between p-3 rounded-none border-t-[3px] border-t-copper/50 border-t-double cursor-pointer hover:bg-copper/5 transition-colors active:bg-copper/10 select-none bg-white/60"
                   onClick={() => setEditExpense(e)}
                 >
                   <div className="recorded-watermark" aria-hidden>RECORDED</div>
