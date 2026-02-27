@@ -161,7 +161,7 @@ export default function PersonalDashboard({ person, expenses, onBack, onUpdateEx
                       )}
                       {e.thirdPartyName && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/20 text-accent-foreground font-medium">
-                          Para: {e.thirdPartyName}
+                          {e.thirdPartyName}
                         </span>
                       )}
                     </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { deleteField } from 'firebase/firestore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -70,7 +71,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
         paidBy,
         date,
         ...(paymentType && { paymentType }),
-        ...(thirdPartyName.trim() && { thirdPartyName: thirdPartyName.trim() }),
+        thirdPartyName: thirdPartyName.trim() ? thirdPartyName.trim() : deleteField(),
       });
       setSuccessDialogOpen(true);
     } catch {
@@ -89,10 +90,11 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
     setConfirmDeleteOpen(false);
     try {
       await onDelete(expense.id);
-      toast.success('Gasto eliminado.');
-      onOpenChange(false);
+      toast.success('Registro anulado del libro.');
     } catch {
       toast.error('Error al eliminar.');
+    } finally {
+      onOpenChange(false);
     }
   };
 
@@ -100,7 +102,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle>Editar Gasto</DialogTitle>
+          <DialogTitle className="font-serif text-copper" style={{ fontFamily: "'Playfair Display', serif" }}>Modificar Registro</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
@@ -180,10 +182,10 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
             <Input placeholder="Nombre" value={thirdPartyName} onChange={e => setThirdPartyName(e.target.value)} maxLength={50} />
           </div>
           <div className="flex gap-2 pt-2">
-            <Button onClick={handleSave} className="flex-1 rounded-xl" disabled={saving}>
-              {saving ? 'Guardando...' : 'Guardar'}
+            <Button onClick={handleSave} className="flex-1 rounded-xl bg-copper hover:bg-copper/90" disabled={saving}>
+              {saving ? 'Archivando...' : 'Archivar'}
             </Button>
-            <Button variant="destructive" onClick={() => setConfirmDeleteOpen(true)} className="rounded-xl">Eliminar</Button>
+            <Button variant="destructive" onClick={() => setConfirmDeleteOpen(true)} className="rounded-xl">Anular Registro</Button>
           </div>
         </div>
       </DialogContent>
@@ -191,13 +193,13 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
       <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar este gasto?</AlertDialogTitle>
-            <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+            <AlertDialogTitle>¿Anular este registro del libro?</AlertDialogTitle>
+            <AlertDialogDescription>Esta acción no se puede deshacer, partner.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>Abandonar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Eliminar
+              Anular Registro
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -211,10 +213,10 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
                 <CheckCircle2 className="h-10 w-10 text-accent" />
               </div>
               <AlertDialogTitle className="text-center text-lg">
-                Gasto guardado correctamente
+                ✓ Duly recorded in the ledger
               </AlertDialogTitle>
               <AlertDialogDescription className="text-center">
-                Los cambios han sido guardados exitosamente.
+                Los cambios han sido archivados correctamente.
               </AlertDialogDescription>
             </div>
           </AlertDialogHeader>

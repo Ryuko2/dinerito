@@ -31,15 +31,19 @@ export function normalizeExpense(raw: Record<string, unknown>, id: string): Expe
   const category = typeof raw.category === "string" && CATEGORIES.includes(raw.category as typeof CATEGORIES[number])
     ? raw.category
     : "Otro";
+  // Support old field names: monto->amount, fecha->date, descripcion->description
+  const amountVal = raw.amount ?? raw.monto;
+  const dateVal = raw.date ?? raw.fecha;
+  const descVal = raw.description ?? raw.descripcion;
   return {
     id,
-    amount: typeof raw.amount === "number" ? raw.amount : Number(raw.amount) || 0,
-    description: typeof raw.description === "string" ? raw.description : String(raw.description ?? ""),
+    amount: typeof amountVal === "number" ? amountVal : Number(amountVal) || 0,
+    description: typeof descVal === "string" ? descVal : String(descVal ?? ""),
     category,
     card: typeof raw.card === "string" ? raw.card : "efectivo",
     brand: typeof raw.brand === "string" ? raw.brand : "",
     paidBy,
-    date: toDateString(raw.date),
+    date: toDateString(dateVal),
     createdAt: toIsoString(raw.createdAt),
     paymentType: raw.paymentType === "credito" || raw.paymentType === "debito" ? raw.paymentType : undefined,
     thirdPartyName: typeof raw.thirdPartyName === "string" && raw.thirdPartyName ? raw.thirdPartyName : undefined,
@@ -48,11 +52,13 @@ export function normalizeExpense(raw: Record<string, unknown>, id: string): Expe
 
 export function normalizeGoal(raw: Record<string, unknown>, id: string): SavingsGoal {
   const icon = typeof raw.icon === "string" && (GOAL_ICONS as readonly string[]).includes(raw.icon) ? raw.icon : "Target";
+  const targetVal = raw.targetAmount ?? raw.target;
+  const currentVal = raw.currentAmount ?? raw.current;
   return {
     id,
     name: typeof raw.name === "string" ? raw.name : String(raw.name ?? ""),
-    targetAmount: typeof raw.targetAmount === "number" ? raw.targetAmount : Number(raw.targetAmount) || 0,
-    currentAmount: typeof raw.currentAmount === "number" ? raw.currentAmount : Number(raw.currentAmount) || 0,
+    targetAmount: typeof targetVal === "number" ? targetVal : Number(targetVal) || 0,
+    currentAmount: typeof currentVal === "number" ? currentVal : Number(currentVal) || 0,
     icon,
     createdAt: toIsoString(raw.createdAt),
   };
@@ -60,12 +66,15 @@ export function normalizeGoal(raw: Record<string, unknown>, id: string): Savings
 
 export function normalizeIncome(raw: Record<string, unknown>, id: string): Income {
   const person = raw.person === "girlfriend" ? "girlfriend" : "boyfriend";
+  const amountVal = raw.amount ?? raw.monto;
+  const dateVal = raw.date ?? raw.fecha;
+  const descVal = raw.description ?? raw.descripcion;
   return {
     id,
-    amount: typeof raw.amount === "number" ? raw.amount : Number(raw.amount) || 0,
-    description: typeof raw.description === "string" ? raw.description : String(raw.description ?? ""),
+    amount: typeof amountVal === "number" ? amountVal : Number(amountVal) || 0,
+    description: typeof descVal === "string" ? descVal : String(descVal ?? ""),
     person,
-    date: toDateString(raw.date),
+    date: toDateString(dateVal),
     createdAt: toIsoString(raw.createdAt),
   };
 }

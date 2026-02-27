@@ -54,13 +54,13 @@ export default function IncomeSection({ incomes, expenses, onAddIncome, onRemove
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          <DollarSign className="h-5 w-5 text-primary" /> Ingresos
+        <h2 className="text-xl font-bold flex items-center gap-2 font-serif text-copper" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <DollarSign className="h-5 w-5 text-copper" /> Depósitos
         </h2>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" /> Agregar</Button></DialogTrigger>
-          <DialogContent aria-describedby={undefined}>
-            <DialogHeader><DialogTitle>Registrar Ingreso</DialogTitle></DialogHeader>
+          <DialogTrigger asChild><Button size="sm" className="bg-copper hover:bg-copper/90"><Plus className="h-4 w-4 mr-1" /> Registrar Depósito</Button></DialogTrigger>
+          <DialogContent aria-describedby={undefined} className="bg-[#F5ECD7] border-copper/30">
+            <DialogHeader><DialogTitle className="font-serif text-copper" style={{ fontFamily: "'Playfair Display', serif" }}>Registrar Depósito</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div className="flex gap-3">
                 {([{ value: 'boyfriend' as Person, img: sheriffBoy, label: PERSON_NAMES.boyfriend }, { value: 'girlfriend' as Person, img: sheriffGirl, label: PERSON_NAMES.girlfriend }]).map(({ value, img, label }) => (
@@ -74,7 +74,7 @@ export default function IncomeSection({ incomes, expenses, onAddIncome, onRemove
               <div><Label className="text-xs">Monto (MXN)</Label><Input type="number" step="0.01" min="0" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} /></div>
               <div><Label className="text-xs">Descripcion</Label><Input placeholder="Concepto" value={description} onChange={e => setDescription(e.target.value)} maxLength={200} /></div>
               <div><Label className="text-xs">Fecha</Label><Input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
-              <Button onClick={handleCreate} className="w-full" disabled={submitting}>{submitting ? 'Guardando...' : 'Registrar'}</Button>
+              <Button onClick={handleCreate} className="w-full bg-copper hover:bg-copper/90" disabled={submitting}>{submitting ? 'Archivando...' : 'Archivar'}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -84,17 +84,17 @@ export default function IncomeSection({ incomes, expenses, onAddIncome, onRemove
       <div className="grid grid-cols-3 gap-2">
         <Card><CardContent className="pt-3 pb-3 text-center">
           <TrendingUp className="h-5 w-5 text-accent mx-auto mb-1" />
-          <p className="text-[10px] text-muted-foreground">Ingresos</p>
+          <p className="text-[10px] text-copper/80">Depósitos</p>
           <p className="text-sm font-bold">{fmt(totalIncome)}</p>
         </CardContent></Card>
         <Card><CardContent className="pt-3 pb-3 text-center">
           <TrendingDown className="h-5 w-5 text-destructive mx-auto mb-1" />
-          <p className="text-[10px] text-muted-foreground">Gastos</p>
+          <p className="text-[10px] text-copper/80">Retiros</p>
           <p className="text-sm font-bold">{fmt(totalExpenses)}</p>
         </CardContent></Card>
         <Card><CardContent className="pt-3 pb-3 text-center">
           <Minus className="h-5 w-5 text-primary mx-auto mb-1" />
-          <p className="text-[10px] text-muted-foreground">Saldo</p>
+          <p className="text-[10px] text-copper/80">Saldo</p>
           <p className={`text-sm font-bold ${balance >= 0 ? 'text-accent' : 'text-destructive'}`}>{fmt(balance)}</p>
         </CardContent></Card>
       </div>
@@ -109,8 +109,8 @@ export default function IncomeSection({ incomes, expenses, onAddIncome, onRemove
                 <span className="text-sm font-semibold">{PERSON_NAMES[p]}</span>
               </div>
               <div className="space-y-0.5 text-xs">
-                <div className="flex justify-between"><span className="text-muted-foreground">Ingresos</span><span>{fmt(byPerson[p].income)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Gastos</span><span>{fmt(byPerson[p].expenses)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Depósitos</span><span>{fmt(byPerson[p].income)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Retiros</span><span>{fmt(byPerson[p].expenses)}</span></div>
                 <div className="flex justify-between font-semibold"><span>Saldo</span><span className={byPerson[p].balance >= 0 ? 'text-accent' : 'text-destructive'}>{fmt(byPerson[p].balance)}</span></div>
               </div>
             </CardContent>

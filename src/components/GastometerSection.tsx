@@ -47,15 +47,15 @@ export default function GastometerSection({ expenses, incomes }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-primary/15">
-            <Thermometer className="h-5 w-5 text-primary" />
+        <h2 className="text-xl font-bold flex items-center gap-2 font-serif text-copper" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <div className="p-1.5 rounded-lg bg-copper/15">
+            <Thermometer className="h-5 w-5 text-copper" />
           </div>
           Gastómetro
         </h2>
       </div>
 
-      <p className="text-sm text-muted-foreground">Compara tus gastos con tus ingresos</p>
+      <p className="text-sm text-copper/80">Compara tus retiros con tus depósitos</p>
 
       <Card className={`border-0 shadow-md overflow-hidden transition-all duration-500 ${
         status === 'ok' ? '' :
@@ -102,17 +102,17 @@ export default function GastometerSection({ expenses, incomes }: Props) {
             </div>
 
             <div className="grid grid-cols-2 gap-4 w-full">
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-accent/10">
-                <TrendingUp className="h-5 w-5 text-accent" />
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-sage-green/20">
+                <TrendingUp className="h-5 w-5 text-sage-green" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground">Ingresos</p>
+                  <p className="text-[10px] text-copper/80">Depósitos</p>
                   <p className="font-bold">{fmt(totalIncome)}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10">
-                <TrendingDown className="h-5 w-5 text-destructive" />
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-rust-red/20">
+                <TrendingDown className="h-5 w-5 text-rust-red" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground">Gastos</p>
+                  <p className="text-[10px] text-copper/80">Retiros</p>
                   <p className="font-bold">{fmt(totalExpenses)}</p>
                 </div>
               </div>
@@ -133,8 +133,8 @@ export default function GastometerSection({ expenses, incomes }: Props) {
                   <span className="text-sm font-semibold">{PERSON_NAMES[p]}</span>
                 </div>
                 <div className="space-y-0.5 text-xs">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Ingresos</span><span>{fmt(d.income)}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Gastos</span><span>{fmt(d.expenses)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Depósitos</span><span>{fmt(d.income)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Retiros</span><span>{fmt(d.expenses)}</span></div>
                   <div className={`flex justify-between font-semibold ${s === 'danger' ? 'text-destructive' : s === 'hot' ? 'text-orange-500' : ''}`}>
                     <span>Ratio</span>
                     <span>{(d.ratio * 100).toFixed(0)}%</span>

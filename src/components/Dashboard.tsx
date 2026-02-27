@@ -4,13 +4,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { Expense, CARDS, PERSON_NAMES, CATEGORIES, Person } from '@/lib/types';
+import { Expense, Income, CARDS, PERSON_NAMES, CATEGORIES, Person } from '@/lib/types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { TrendingUp, Wallet, CreditCard, Filter } from 'lucide-react';
 import CategoryIcon from '@/components/CategoryIcon';
 import CardBrandIcon from '@/components/CardBrandIcon';
 import ExpenseEditDialog from '@/components/ExpenseEditDialog';
 import PersonalDashboard from '@/components/PersonalDashboard';
+import WestDivider from '@/components/WestDivider';
+import CurrencyDisplay from '@/components/CurrencyDisplay';
 import sheriffBoy from '@/assets/sheriff-boy.png';
 import sheriffGirl from '@/assets/sheriff-girl.png';
 
@@ -24,11 +26,12 @@ const cardLabelMap = Object.fromEntries(CARDS.map(c => [c.value, c.label]));
 
 interface Props {
   expenses: Expense[];
+  incomes: Income[];
   onUpdateExpense: (id: string, data: Partial<Expense>) => Promise<void>;
   onDeleteExpense: (id: string) => Promise<void>;
 }
 
-export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }: Props) {
+export default function Dashboard({ expenses, incomes, onUpdateExpense, onDeleteExpense }: Props) {
   const now = new Date();
   const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
   const todayStr = now.toISOString().split('T')[0];
@@ -55,6 +58,8 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
   }, [expenses, dateFrom, dateTo, filterPerson, filterCard, filterCategory, filterPaymentType]);
 
   const total = filtered.reduce((s, e) => s + e.amount, 0);
+  const totalDeposits = incomes.reduce((s, i) => s + i.amount, 0);
+  const netBalance = totalDeposits - total;
   const boyfriendTotal = filtered.filter(e => e.paidBy === 'boyfriend').reduce((s, e) => s + e.amount, 0);
   const girlfriendTotal = filtered.filter(e => e.paidBy === 'girlfriend').reduce((s, e) => s + e.amount, 0);
 
@@ -91,11 +96,11 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-primary/15">
-            <TrendingUp className="h-5 w-5 text-primary" />
+        <h2 className="text-xl font-bold flex items-center gap-2 font-serif text-copper" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <div className="p-1.5 rounded-lg bg-copper/15">
+            <TrendingUp className="h-5 w-5 text-copper" />
           </div>
-          Dashboard
+          Mi Libro
         </h2>
       </div>
 
@@ -103,8 +108,8 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
       <Card className="border-0 shadow-md overflow-hidden">
         <CardContent className="pt-4 pb-4">
           <div className="flex items-center gap-2 mb-3">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Filtros</span>
+            <Filter className="h-4 w-4 text-copper" />
+            <span className="text-xs font-semibold uppercase tracking-wide text-copper">Categorías del Libro</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -175,34 +180,45 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
         </CardContent>
       </Card>
 
+      {/* Account Balance — bank statement style */}
+      <Card className="border-2 border-copper/40 overflow-hidden relative bg-[#5C3A1E] text-[#F5ECD7]">
+        <div className="bank-seal-watermark" aria-hidden />
+        <CardContent className="pt-5 pb-5 relative">
+          <p className="text-xs uppercase tracking-[0.2em] text-copper font-semibold mb-3">Account Balance</p>
+          <div className="border-b border-copper/40 pb-2 mb-2" />
+          <div className="flex justify-between text-sm mb-1">
+            <span className="text-[#F5ECD7]/90">Total Deposits</span>
+            <CurrencyDisplay amount={totalDeposits} variant="income" className="text-sage-green font-mono text-base" />
+          </div>
+          <div className="flex justify-between text-sm mb-2">
+            <span className="text-[#F5ECD7]/90">Total Withdrawals</span>
+            <CurrencyDisplay amount={total} variant="expense" className="font-mono text-base" />
+          </div>
+          <div className="border-b border-copper/40 pb-2 mb-2" />
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-semibold uppercase tracking-wide">Net Balance</span>
+            <span className={`font-mono text-2xl ${netBalance >= 0 ? 'text-sage-green' : 'text-rust-red'}`} style={{ fontFamily: "'DM Mono', monospace" }}>{fmt(netBalance)}</span>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Card className="border-0 shadow-md bg-gradient-to-br from-primary/10 to-primary/5">
-          <CardContent className="pt-4 pb-4 flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-primary/15">
-              <Wallet className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Total</p>
-              <p className="text-xl font-bold">{fmt(total)}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="cursor-pointer hover:ring-2 ring-primary/30 transition-all border-0 shadow-md" onClick={() => setPersonalPerson('boyfriend')}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Card className="cursor-pointer hover:ring-2 ring-copper/40 transition-all border border-copper/30 shadow-md bg-[#F5ECD7]/80" onClick={() => setPersonalPerson('boyfriend')}>
           <CardContent className="pt-4 pb-4 flex items-center gap-3">
             <img
               src={sheriffBoy}
               alt={PERSON_NAMES.boyfriend}
-              className="h-10 w-10 rounded-full ring-2 ring-primary/20 cursor-pointer"
+              className="h-10 w-10 rounded-full ring-2 ring-copper/30 cursor-pointer"
               onClick={(e) => { e.stopPropagation(); setAvatarViewer(sheriffBoy); }}
             />
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">{PERSON_NAMES.boyfriend}</p>
-              <p className="text-xl font-bold">{fmt(boyfriendTotal)}</p>
+              <p className="text-[10px] uppercase tracking-wide text-copper/80 font-medium">{PERSON_NAMES.boyfriend}</p>
+              <p className="text-xl font-bold font-mono text-rust-red">{fmt(boyfriendTotal)}</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:ring-2 ring-primary/30 transition-all border-0 shadow-md" onClick={() => setPersonalPerson('girlfriend')}>
+        <Card className="cursor-pointer hover:ring-2 ring-copper/40 transition-all border border-copper/30 shadow-md bg-[#F5ECD7]/80" onClick={() => setPersonalPerson('girlfriend')}>
           <CardContent className="pt-4 pb-4 flex items-center gap-3">
             <img
               src={sheriffGirl}
@@ -211,12 +227,14 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
               onClick={(e) => { e.stopPropagation(); setAvatarViewer(sheriffGirl); }}
             />
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">{PERSON_NAMES.girlfriend}</p>
-              <p className="text-xl font-bold">{fmt(girlfriendTotal)}</p>
+              <p className="text-[10px] uppercase tracking-wide text-copper/80 font-medium">{PERSON_NAMES.girlfriend}</p>
+              <p className="text-xl font-bold font-mono text-rust-red">{fmt(girlfriendTotal)}</p>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <WestDivider />
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -228,7 +246,7 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
           </CardHeader>
           <CardContent>
             {byCategory.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8 text-sm">Sin gastos registrados</p>
+              <p className="text-copper/80 text-center py-8 text-sm">Tu libro está limpio, partner. Registra tu primer retiro para comenzar.</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
@@ -256,7 +274,7 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
           </CardHeader>
           <CardContent>
             {byMonth.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8 text-sm">Sin gastos registrados</p>
+              <p className="text-copper/80 text-center py-8 text-sm">Tu libro está limpio, partner.</p>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={byMonth}>
@@ -271,28 +289,34 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
         </Card>
       </div>
 
-      {/* Expense list */}
+      {/* Ledger — expense list */}
       {filtered.length > 0 && (
-        <Card className="border-0 shadow-md">
+        <Card className="border border-copper/30 shadow-md bg-[#F5ECD7]/90">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Gastos ({filtered.length})</CardTitle>
+            <div className="grid grid-cols-[1fr_2fr_1fr_auto] gap-2 text-[10px] uppercase tracking-wider text-copper font-semibold border-b border-copper/40 pb-2">
+              <span>Fecha</span>
+              <span>Descripción</span>
+              <span>Categoría</span>
+              <span className="text-right">Monto</span>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1.5 max-h-[60vh] overflow-y-auto overscroll-contain">
+            <div className="space-y-0 max-h-[60vh] overflow-y-auto overscroll-contain">
               {filtered.slice().reverse().map(e => (
                 <div
                   key={e.id}
-                  className="flex items-center justify-between p-3 rounded-xl bg-muted/40 cursor-pointer hover:bg-muted/70 transition-colors active:bg-muted/90 select-none"
+                  className="relative flex items-center justify-between p-3 rounded-none border-t-[3px] border-t-copper/50 border-t-double cursor-pointer hover:bg-copper/5 transition-colors active:bg-copper/10 select-none bg-white/60"
                   onClick={() => setEditExpense(e)}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
-                      <CategoryIcon category={e.category} className="h-4 w-4 text-primary" />
+                  <div className="recorded-watermark" aria-hidden>RECORDED</div>
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1 relative">
+                    <div className="p-1.5 rounded-lg bg-copper/15 shrink-0">
+                      <CategoryIcon category={e.category} className="h-4 w-4 text-copper" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <p className="text-sm font-medium truncate">{e.description}</p>
-                        <span className="text-xs text-muted-foreground shrink-0">{e.category}</span>
+                        <span className="text-xs text-copper/80 shrink-0">{e.category}</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                         <CardBrandIcon card={e.card} className="h-3.5 w-3.5" />
@@ -300,25 +324,25 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
                       </div>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {e.paymentType && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-medium">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-copper/10 text-copper/90 font-medium">
                             {e.paymentType === 'credito' ? '💳 Crédito' : '💳 Débito'}
                           </span>
                         )}
                         {e.brand && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-medium">🏪 {e.brand}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-copper/10 text-copper/90 font-medium">🏪 {e.brand}</span>
                         )}
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-medium">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-copper/10 text-copper/90 font-medium">
                           👤 {PERSON_NAMES[e.paidBy]}
                         </span>
                         {e.thirdPartyName && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/20 text-accent-foreground font-medium">
-                            Para: {e.thirdPartyName}
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-sage-green/20 text-sage-green font-medium">
+                            {e.thirdPartyName}
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
-                  <span className="font-bold text-sm shrink-0 ml-2">{fmt(e.amount)}</span>
+                  <span className="font-mono font-bold text-sm shrink-0 ml-2 text-rust-red" style={{ fontFamily: "'DM Mono', monospace" }}>{fmt(e.amount)}</span>
                 </div>
               ))}
             </div>

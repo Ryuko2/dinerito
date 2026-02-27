@@ -4,50 +4,56 @@
 
 @layer base {
   :root {
-    --background: 35 30% 96%;
+    --background: 35 35% 95%;
     --foreground: 25 30% 15%;
+    --aged-paper: #F5ECD7;
+    --copper: #C87941;
+    --dark-leather: #5C3A1E;
+    --rust-red: #A63D2F;
+    --sage-green: #7A9E7E;
+    --bone-white: #F5ECD7;
 
-    --card: 0 0% 100%;
+    --card: 35 30% 96%;
     --card-foreground: 25 30% 15%;
 
-    --popover: 0 0% 100%;
+    --popover: 35 30% 96%;
     --popover-foreground: 25 30% 15%;
 
-    --primary: 15 65% 52%;
+    --primary: 25 55% 52%;
     --primary-foreground: 35 30% 98%;
 
-    --secondary: 45 55% 85%;
+    --secondary: 35 40% 88%;
     --secondary-foreground: 25 30% 20%;
 
-    --muted: 35 20% 92%;
-    --muted-foreground: 25 15% 50%;
+    --muted: 35 25% 90%;
+    --muted-foreground: 25 20% 45%;
 
-    --accent: 145 30% 45%;
+    --accent: 145 25% 48%;
     --accent-foreground: 145 10% 98%;
 
-    --destructive: 0 65% 55%;
+    --destructive: 5 65% 42%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 30 15% 90%;
-    --input: 30 15% 90%;
-    --ring: 15 65% 52%;
+    --border: 30 25% 85%;
+    --input: 30 25% 88%;
+    --ring: 25 55% 52%;
 
-    --radius: 1rem;
+    --radius: 0.5rem;
 
-    --sidebar-background: 35 25% 95%;
+    --sidebar-background: 25 35% 92%;
     --sidebar-foreground: 25 30% 15%;
-    --sidebar-primary: 15 65% 52%;
+    --sidebar-primary: 25 55% 52%;
     --sidebar-primary-foreground: 35 30% 98%;
-    --sidebar-accent: 45 55% 85%;
+    --sidebar-accent: 35 40% 85%;
     --sidebar-accent-foreground: 25 30% 20%;
-    --sidebar-border: 30 20% 88%;
-    --sidebar-ring: 15 65% 52%;
+    --sidebar-border: 30 25% 82%;
+    --sidebar-ring: 25 55% 52%;
 
     --warning: 40 90% 50%;
     --warning-foreground: 40 90% 10%;
-    --success: 145 50% 42%;
+    --success: 145 35% 48%;
     --success-foreground: 145 10% 98%;
-    --chart-1: 15 65% 52%;
+    --chart-1: 25 55% 52%;
     --chart-2: 45 55% 65%;
     --chart-3: 145 30% 45%;
     --chart-4: 200 40% 55%;
@@ -121,7 +127,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+    font-family: 'DM Mono', 'Georgia', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100%;
@@ -203,4 +209,86 @@
 
 .animate-flame-flicker {
   animation: flame-flicker 1s ease-in-out infinite;
+}
+
+/* Old West Bank — Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #E8D5B0;
+}
+::-webkit-scrollbar-thumb {
+  background: #8B5E3C;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6B4E2C;
+}
+
+/* Ledger lines background */
+.bg-ledger {
+  background-color: #F5ECD7;
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 47px,
+    rgba(139, 94, 60, 0.12) 47px,
+    rgba(139, 94, 60, 0.12) 48px
+  );
+}
+
+/* Bank header double border */
+.bank-header-frame {
+  border: 2px solid #C87941;
+  outline: 1px solid #C87941;
+  outline-offset: 4px;
+}
+
+/* Decorative divider */
+.west-divider {
+  color: #C87941;
+  letter-spacing: 0.25em;
+  font-size: 0.75rem;
+}
+
+/* RECORDED watermark */
+.recorded-watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0.06;
+  color: #A63D2F;
+  font-size: 2.5rem;
+  font-weight: 700;
+  transform: rotate(-15deg);
+  font-family: "Playfair Display", serif;
+}
+
+/* Bank seal watermark */
+.bank-seal-watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0.04;
+}
+.bank-seal-watermark::before {
+  content: "EST.";
+  font-size: 4rem;
+  font-weight: 700;
+  color: #C87941;
+  font-family: "Playfair Display", serif;
+  border: 2px solid rgba(200, 121, 65, 0.5);
+  border-radius: 50%;
+  width: 160px;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

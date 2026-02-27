@@ -118,13 +118,13 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
   };
 
   return (
-    <Card className="overflow-hidden border-0 shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent pb-3">
-        <CardTitle className="flex items-center gap-2 text-xl">
-          <div className="p-1.5 rounded-lg bg-primary/15">
-            <PlusCircle className="h-5 w-5 text-primary" />
+    <Card className="overflow-hidden border border-copper/30 shadow-lg bg-[#F5ECD7]/90">
+      <CardHeader className="bg-gradient-to-r from-copper/15 via-copper/10 to-transparent pb-3 border-b border-copper/30">
+        <CardTitle className="flex items-center gap-2 text-xl font-serif text-copper" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <div className="p-1.5 rounded-lg bg-copper/20">
+            <PlusCircle className="h-5 w-5 text-copper" />
           </div>
-          Registrar Gasto
+          Registrar Retiro
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
@@ -143,11 +143,11 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
                   onClick={() => setPaidBy(value)}
                   className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all duration-200 ${
                     paidBy === value
-                      ? 'border-primary bg-primary/10 shadow-md scale-[1.02]'
-                      : 'border-border hover:border-primary/30 hover:bg-muted/50'
+                      ? 'border-copper bg-copper/10 shadow-md scale-[1.02]'
+                      : 'border-copper/30 hover:border-copper/50 hover:bg-copper/5'
                   }`}
                 >
-                  <img src={img} alt={label} className={`w-12 h-12 rounded-full transition-all ${paidBy === value ? 'ring-2 ring-primary ring-offset-2' : ''}`} />
+                  <img src={img} alt={label} className={`w-12 h-12 rounded-full transition-all ${paidBy === value ? 'ring-2 ring-copper ring-offset-2' : ''}`} />
                   <span className="text-sm font-semibold">{label}</span>
                 </button>
               ))}
@@ -253,7 +253,7 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
                     type="button"
                     onClick={() => setThirdPartySelection(value)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition-all text-sm font-medium ${
-                      thirdPartySelection === value ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/30'
+                      thirdPartySelection === value ? 'border-copper bg-copper/10' : 'border-copper/30 hover:border-copper/50'
                     }`}
                   >
                     {img && <img src={img} alt="" className="w-6 h-6 rounded-full" />}
@@ -267,8 +267,8 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
             </div>
           )}
 
-          <Button type="submit" className="w-full text-base font-bold h-12 rounded-xl shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30" disabled={submitting}>
-            {submitting ? 'Guardando...' : 'Registrar Gasto'}
+          <Button type="submit" className="w-full text-base font-bold h-12 rounded-xl shadow-lg shadow-copper/20 transition-all hover:shadow-xl hover:shadow-copper/30 bg-copper hover:bg-copper/90" disabled={submitting}>
+            {submitting ? 'Archivando...' : 'Registrar Retiro'}
           </Button>
         </form>
       </CardContent>
@@ -281,10 +281,10 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
                 <CheckCircle2 className="h-10 w-10 text-accent" />
               </div>
               <AlertDialogTitle className="text-center text-lg">
-                Gasto guardado correctamente
+                ✓ Duly recorded in the ledger
               </AlertDialogTitle>
               <AlertDialogDescription className="text-center">
-                Tu gasto ha sido registrado exitosamente.
+                Duly recorded in the ledger.
               </AlertDialogDescription>
             </div>
           </AlertDialogHeader>
