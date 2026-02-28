@@ -14,16 +14,11 @@ export default {
     },
     extend: {
       fontFamily: {
+        sans: ["Kanit", "system-ui", "sans-serif"],
         serif: ["Playfair Display", "Georgia", "serif"],
         mono: ["DM Mono", "monospace"],
       },
       colors: {
-        copper: "#C87941",
-        "aged-paper": "#F5ECD7",
-        "dark-leather": "#5C3A1E",
-        "rust-red": "#A63D2F",
-        "sage-green": "#7A9E7E",
-        "bone-white": "#F5ECD7",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

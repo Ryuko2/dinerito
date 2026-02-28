@@ -57,11 +57,11 @@ export default function GoalsSection({ goals, onAddGoal, onUpdateGoal, onRemoveG
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold flex items-center gap-2 font-serif text-copper" style={{ fontFamily: "'Playfair Display', serif" }}>
-          <Target className="h-5 w-5 text-copper" /> Metas de Ahorro
+        <h2 className="text-xl font-bold flex items-center gap-2">
+          <Target className="h-5 w-5 text-primary" /> Metas de Ahorro
         </h2>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button size="sm" className="bg-copper hover:bg-copper/90"><Plus className="h-4 w-4 mr-1" /> Nueva</Button></DialogTrigger>
+          <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" /> Nueva</Button></DialogTrigger>
           <DialogContent aria-describedby={undefined}>
             <DialogHeader><DialogTitle>Nueva Meta</DialogTitle></DialogHeader>
             <div className="space-y-4">
@@ -87,7 +87,7 @@ export default function GoalsSection({ goals, onAddGoal, onUpdateGoal, onRemoveG
       {goals.length === 0 ? (
         <Card><CardContent className="py-12 text-center">
           <PiggyBank className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-copper/80">Sin metas de ahorro</p>
+          <p className="text-muted-foreground">Sin metas de ahorro</p>
         </CardContent></Card>
       ) : (
         <div className="grid gap-3">

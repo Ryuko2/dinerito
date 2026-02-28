@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import RegistrarGasto from '@/components/RegistrarGasto';
+import ExpenseForm from '@/components/ExpenseForm';
 import Dashboard from '@/components/Dashboard';
 import GoalsSection from '@/components/GoalsSection';
 import IncomeSection from '@/components/IncomeSection';
@@ -14,8 +14,7 @@ import {
 import { useCollection } from '@/hooks/useFirestore';
 import { Expense, SavingsGoal, Income, Budget } from '@/lib/types';
 import { orderBy } from 'firebase/firestore';
-import { BarChart3, PlusCircle, Target, DollarSign, PieChart, Settings2, Download, Upload, Thermometer, Languages } from 'lucide-react';
-import BankHeader from '@/components/BankHeader';
+import { BarChart3, PlusCircle, Target, DollarSign, PieChart, Settings2, Download, Upload, Thermometer, Languages, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import sheriffBoy from '@/assets/sheriff-boy.png';
 import sheriffGirl from '@/assets/sheriff-girl.png';
@@ -29,16 +28,18 @@ import { sanitizeForFirestore } from '@/lib/utils';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import GastometerSection from '@/components/GastometerSection';
+import SettingsPage from '@/components/SettingsPage';
 import { useI18n } from '@/lib/i18n';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 
 const TABS = [
-  { key: 'add', label: 'Registrar Gasto', labelEn: 'Register Expense', icon: PlusCircle },
-  { key: 'dashboard', label: 'Mi Libro', labelEn: 'My Ledger', icon: BarChart3 },
+  { key: 'add', label: 'Agregar', labelEn: 'Add', icon: PlusCircle },
+  { key: 'dashboard', label: 'Dashboard', labelEn: 'Dashboard', icon: BarChart3 },
   { key: 'gastometer', label: 'Gastómetro', labelEn: 'Gastometer', icon: Thermometer },
-  { key: 'income', label: 'Depósitos', labelEn: 'Deposits', icon: DollarSign },
-  { key: 'budgets', label: 'Asignación', labelEn: 'Allowance', icon: PieChart },
+  { key: 'income', label: 'Ingresos', labelEn: 'Income', icon: DollarSign },
+  { key: 'budgets', label: 'Presupuestos', labelEn: 'Budgets', icon: PieChart },
   { key: 'goals', label: 'Metas', labelEn: 'Goals', icon: Target },
+  { key: 'settings', label: 'Ajustes', labelEn: 'Settings', icon: Settings },
 ] as const;
 
 type TabKey = typeof TABS[number]['key'];
@@ -144,6 +145,17 @@ const Index = () => {
     input.click();
   };
 
+  useEffect(() => {
+    const onExport = () => handleExport();
+    const onImport = () => handleImport();
+    window.addEventListener('dinerito:export', onExport);
+    window.addEventListener('dinerito:import', onImport);
+    return () => {
+      window.removeEventListener('dinerito:export', onExport);
+      window.removeEventListener('dinerito:import', onImport);
+    };
+  }, [expenses, goals, incomes, budgets]);
+
   const tabIndex = TABS.findIndex(t => t.key === activeTab);
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -172,13 +184,12 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F5ECD7] flex items-center justify-center p-8">
-        <div className="flex flex-col items-center gap-6 animate-in fade-in duration-700">
-          <div className="text-copper font-serif font-bold text-2xl tracking-wide text-center" style={{ fontFamily: "'Playfair Display', serif" }}>
-            Dinerito
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="animate-spin h-10 w-10 border-[3px] border-primary/30 border-t-primary rounded-full" />
           </div>
-          <div className="text-copper/80 animate-pulse">★</div>
-          <div className="animate-spin h-8 w-8 border-2 border-copper/30 border-t-copper rounded-full" />
+          <p className="text-muted-foreground text-sm font-medium">Cargando...</p>
         </div>
       </div>
     );
@@ -211,20 +222,25 @@ const Index = () => {
         </div>
       )}
       {/* Header */}
-      <header className="glass sticky top-0 z-10 border-b border-copper/30">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <BankHeader />
+      <header className="glass sticky top-0 z-10 border-b">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-xl gradient-primary">
+              <Target className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-lg font-extrabold leading-tight tracking-tight">Sheriff de Gastos</h1>
+              <p className="text-[10px] text-muted-foreground font-medium tracking-wide">Kevin & Angeles</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2">
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
                   <Settings2 className="h-5 w-5 text-muted-foreground" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-56 p-2 border-copper/30 bg-[#F5ECD7]" align="end">
-                <p className="text-xs font-semibold text-copper uppercase tracking-wider px-2 py-1 mb-1">Preferencias del Banco</p>
+              <PopoverContent className="w-56 p-2" align="end">
                 <div className="space-y-1">
                   <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => setLocale(locale === 'es' ? 'en' : 'es')}>
                     <Languages className="h-4 w-4" /> {locale === 'es' ? 'English' : 'Español'}
@@ -244,43 +260,40 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Content - ledger scrollable area */}
+      {/* Content - scrollable area */}
       <main
-        className="flex-1 min-h-0 max-w-2xl mx-auto px-4 py-5 pb-24 w-full overflow-y-auto overflow-x-hidden overscroll-contain bg-ledger"
+        className="flex-1 min-h-0 max-w-2xl mx-auto px-4 py-5 pb-24 w-full overflow-y-auto overflow-x-hidden overscroll-contain"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
       >
         <div className="transition-all duration-300 ease-out">
-          {activeTab === 'add' && (
-            <RegistrarGasto
-              onExpenseAdded={addExpense}
-              onNavigateToLedger={() => setActiveTab('dashboard')}
-            />
-          )}
-          {activeTab === 'dashboard' && <Dashboard expenses={expenses} incomes={incomes} onUpdateExpense={updateExpense} onDeleteExpense={removeExpense} />}
+          {activeTab === 'add' && <ExpenseForm onExpenseAdded={addExpense} />}
+          {activeTab === 'dashboard' && <Dashboard expenses={expenses} onUpdateExpense={updateExpense} onDeleteExpense={removeExpense} />}
           {activeTab === 'gastometer' && <GastometerSection expenses={expenses} incomes={incomes} />}
           {activeTab === 'income' && <IncomeSection incomes={incomes} expenses={expenses} onAddIncome={addIncome} onRemoveIncome={removeIncome} />}
           {activeTab === 'budgets' && <BudgetSection budgets={budgets} expenses={expenses} onAddBudget={addBudget} onRemoveBudget={removeBudget} />}
           {activeTab === 'goals' && <GoalsSection goals={goals} onAddGoal={addGoal} onUpdateGoal={updateGoal} onRemoveGoal={removeGoal} />}
+          {activeTab === 'settings' && <SettingsPage />}
         </div>
       </main>
 
-      {/* Bottom tab bar - brass plaques style */}
-      <nav className="fixed bottom-0 left-0 right-0 safe-area-pb z-20" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 8px)', background: 'linear-gradient(180deg, #3D2010 0%, #2C1A0E 100%)', borderTop: '2px solid #C87941' }}>
+      {/* Bottom tab bar - iOS style */}
+      <nav className="fixed bottom-0 left-0 right-0 glass border-t safe-area-pb z-20" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 8px)' }}>
         <div className="max-w-2xl mx-auto flex">
           {TABS.map(({ key, label, labelEn, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2 pt-2.5 px-1 mx-0.5 rounded-lg transition-all duration-150 select-none ${
-                activeTab === key
-                  ? 'bg-copper/25 border border-copper text-copper'
-                  : 'bg-copper/10 border border-copper/30 text-[#E8D5B0]/80'
+              className={`flex-1 flex flex-col items-center gap-0.5 py-2 pt-2.5 transition-colors duration-150 select-none ${
+                activeTab === key ? 'text-primary' : 'text-muted-foreground active:text-foreground'
               }`}
             >
               <Icon className={`h-5 w-5 transition-colors ${activeTab === key ? 'drop-shadow-sm' : ''}`} strokeWidth={activeTab === key ? 2.5 : 1.8} />
               <span className={`text-[10px] ${activeTab === key ? 'font-bold' : 'font-medium'}`}>{locale === 'es' ? label : labelEn}</span>
+              {activeTab === key && (
+                <span className="w-1 h-1 rounded-full bg-primary mt-0.5" />
+              )}
             </button>
           ))}
         </div>

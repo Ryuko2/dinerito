@@ -1,16 +1,35 @@
+import { useSettings } from '@/lib/settings';
+
 interface Props {
   amount: number;
   variant?: 'expense' | 'income' | 'neutral';
   className?: string;
 }
 
+const CURRENCY_LOCALE: Record<string, string> = {
+  MXN: 'es-MX',
+  USD: 'en-US',
+  EUR: 'de-DE',
+};
+
 export default function CurrencyDisplay({ amount, variant = 'neutral', className = '' }: Props) {
-  const formatted = new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Math.abs(amount));
+  const { settings } = useSettings();
+  const locale = CURRENCY_LOCALE[settings.currency] ?? 'es-MX';
+  const formatted = (
+    settings.showCents
+      ? new Intl.NumberFormat(locale, {
+          style: 'currency',
+          currency: settings.currency,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      : new Intl.NumberFormat(locale, {
+          style: 'currency',
+          currency: settings.currency,
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        })
+  ).format(Math.abs(amount));
 
   const colorClass =
     variant === 'expense' ? 'text-rust-red' :

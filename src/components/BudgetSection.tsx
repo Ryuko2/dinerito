@@ -40,14 +40,6 @@ function getPeriodDates(period: Budget['period']): { from: string; to: string } 
 
 const PERIOD_LABELS: Record<string, string> = { weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual' };
 
-function BudgetSectionHeader() {
-  return (
-    <h2 className="text-xl font-bold flex items-center gap-2 font-serif text-copper" style={{ fontFamily: "'Playfair Display', serif" }}>
-      <PieChartIcon className="h-5 w-5 text-copper" /> Asignación Mensual
-    </h2>
-  );
-}
-
 export default function BudgetSection({ budgets, expenses, onAddBudget, onRemoveBudget }: Props) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
@@ -95,9 +87,11 @@ export default function BudgetSection({ budgets, expenses, onAddBudget, onRemove
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <BudgetSectionHeader />
+        <h2 className="text-xl font-bold flex items-center gap-2">
+          <PieChartIcon className="h-5 w-5 text-primary" /> Presupuestos
+        </h2>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button size="sm" className="bg-copper hover:bg-copper/90"><Plus className="h-4 w-4 mr-1" /> Nuevo</Button></DialogTrigger>
+          <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" /> Nuevo</Button></DialogTrigger>
           <DialogContent aria-describedby={undefined}>
             <DialogHeader><DialogTitle>Crear Presupuesto</DialogTitle></DialogHeader>
             <div className="space-y-3">

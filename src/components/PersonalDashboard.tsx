@@ -10,6 +10,7 @@ import { ArrowLeft, Wallet } from 'lucide-react';
 import CategoryIcon from '@/components/CategoryIcon';
 import CardBrandIcon from '@/components/CardBrandIcon';
 import ExpenseEditDialog from '@/components/ExpenseEditDialog';
+import { useSettings, useFormatCurrency } from '@/lib/settings';
 import sheriffBoy from '@/assets/sheriff-boy.png';
 import sheriffGirl from '@/assets/sheriff-girl.png';
 
@@ -29,6 +30,8 @@ interface Props {
 }
 
 export default function PersonalDashboard({ person, expenses, onBack, onUpdateExpense, onDeleteExpense }: Props) {
+  const { settings } = useSettings();
+  const fmt = useFormatCurrency();
   const now = new Date();
   const [dateFrom, setDateFrom] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`);
   const [dateTo, setDateTo] = useState(now.toISOString().split('T')[0]);
@@ -53,7 +56,6 @@ export default function PersonalDashboard({ person, expenses, onBack, onUpdateEx
     return Object.entries(map).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [filtered]);
 
-  const fmt = (n: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
   const avatar = person === 'boyfriend' ? sheriffBoy : sheriffGirl;
 
   return (
@@ -136,7 +138,13 @@ export default function PersonalDashboard({ person, expenses, onBack, onUpdateEx
         <CardContent>
           <div className="space-y-1.5 max-h-[50vh] overflow-y-auto overscroll-contain">
             {filtered.slice().reverse().map(e => (
-              <div key={e.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/40 cursor-pointer hover:bg-muted/70 transition-all active:bg-muted/90 select-none" onClick={() => setEditExpense(e)}>
+              <div
+                key={e.id}
+                className={`flex items-center justify-between rounded-xl bg-muted/40 cursor-pointer hover:bg-muted/70 transition-all active:bg-muted/90 select-none ${
+                  settings.compactCards ? 'p-2' : 'p-3'
+                }`}
+                onClick={() => setEditExpense(e)}
+              >
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
                     <CategoryIcon category={e.category} className="h-4 w-4 text-primary" />

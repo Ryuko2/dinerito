@@ -71,7 +71,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
         paidBy,
         date,
         ...(paymentType && { paymentType }),
-        thirdPartyName: thirdPartyName.trim() ? thirdPartyName.trim() : deleteField(),
+        thirdPartyName: thirdPartyName.trim() ? thirdPartyName.trim() : (deleteField() as unknown as string),
       });
       setSuccessDialogOpen(true);
     } catch {
@@ -90,11 +90,10 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
     setConfirmDeleteOpen(false);
     try {
       await onDelete(expense.id);
-      toast.success('Registro anulado del libro.');
+      toast.success('Gasto eliminado.');
+      onOpenChange(false);
     } catch {
       toast.error('Error al eliminar.');
-    } finally {
-      onOpenChange(false);
     }
   };
 
@@ -102,7 +101,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle className="font-serif text-copper" style={{ fontFamily: "'Playfair Display', serif" }}>Modificar Registro</DialogTitle>
+          <DialogTitle>Editar Gasto</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
@@ -182,10 +181,10 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
             <Input placeholder="Nombre" value={thirdPartyName} onChange={e => setThirdPartyName(e.target.value)} maxLength={50} />
           </div>
           <div className="flex gap-2 pt-2">
-            <Button onClick={handleSave} className="flex-1 rounded-xl bg-copper hover:bg-copper/90" disabled={saving}>
-              {saving ? 'Archivando...' : 'Archivar'}
+            <Button onClick={handleSave} className="flex-1 rounded-xl" disabled={saving}>
+              {saving ? 'Guardando...' : 'Guardar'}
             </Button>
-            <Button variant="destructive" onClick={() => setConfirmDeleteOpen(true)} className="rounded-xl">Anular Registro</Button>
+            <Button variant="destructive" onClick={() => setConfirmDeleteOpen(true)} className="rounded-xl">Eliminar</Button>
           </div>
         </div>
       </DialogContent>
@@ -193,13 +192,13 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
       <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Anular este registro del libro?</AlertDialogTitle>
-            <AlertDialogDescription>Esta acción no se puede deshacer, partner.</AlertDialogDescription>
+            <AlertDialogTitle>¿Eliminar este gasto?</AlertDialogTitle>
+            <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Abandonar</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Anular Registro
+              Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -213,10 +212,10 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
                 <CheckCircle2 className="h-10 w-10 text-accent" />
               </div>
               <AlertDialogTitle className="text-center text-lg">
-                ✓ Duly recorded in the ledger
+                Gasto guardado correctamente
               </AlertDialogTitle>
               <AlertDialogDescription className="text-center">
-                Los cambios han sido archivados correctamente.
+                Los cambios han sido guardados exitosamente.
               </AlertDialogDescription>
             </div>
           </AlertDialogHeader>
