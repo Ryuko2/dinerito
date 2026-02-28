@@ -12,9 +12,9 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useCollection } from '@/hooks/useFirestore';
-import { Expense, SavingsGoal, Income, Budget } from '@/lib/types';
+import { Expense, SavingsGoal, Income, Budget, Debt, RecurringExpense } from '@/lib/types';
 import { orderBy } from 'firebase/firestore';
-import { BarChart3, PlusCircle, Target, DollarSign, PieChart, Settings2, Download, Upload, Thermometer, Languages, Settings } from 'lucide-react';
+import { BarChart3, PlusCircle, Target, DollarSign, PieChart, Settings2, Download, Upload, Thermometer, Languages, Settings, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
 import sheriffBoy from '@/assets/sheriff-boy.png';
@@ -29,6 +29,7 @@ import { sanitizeForFirestore } from '@/lib/utils';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import GastometerSection from '@/components/GastometerSection';
+import DebtSection from '@/components/DebtSection';
 import SettingsPage from '@/components/SettingsPage';
 import { useI18n } from '@/lib/i18n';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
@@ -37,6 +38,7 @@ const TABS = [
   { key: 'add', labelKey: 'add' as const, icon: PlusCircle },
   { key: 'dashboard', labelKey: 'dashboard' as const, icon: BarChart3 },
   { key: 'gastometer', labelKey: 'gastometer' as const, icon: Thermometer },
+  { key: 'debts', labelKey: 'debts' as const, icon: CreditCard },
   { key: 'income', labelKey: 'income' as const, icon: DollarSign },
   { key: 'budgets', labelKey: 'budgets' as const, icon: PieChart },
   { key: 'goals', labelKey: 'goals' as const, icon: Target },
@@ -68,12 +70,16 @@ const Index = () => {
     useCollection<Income>('incomes', [orderBy('createdAt', 'desc')]);
   const { data: budgets, loading: bl, error: be, add: addBudget, remove: removeBudget } =
     useCollection<Budget>('budgets', [orderBy('createdAt', 'desc')]);
+  const { data: debts, loading: dl, error: de, add: addDebt, update: updateDebt, remove: removeDebt } =
+    useCollection<Debt>('debts', [orderBy('createdAt', 'desc')]);
+  const { data: recurring, loading: rl, error: re, add: addRecurring, update: updateRecurring, remove: removeRecurring } =
+    useCollection<RecurringExpense>('recurringExpenses', [orderBy('createdAt', 'desc')]);
 
-  const loading = el || gl || il || bl;
-  const error = ee || ge || ie || be;
+  const loading = el || gl || il || bl || dl || rl;
+  const error = ee || ge || ie || be || de || re;
 
   const handleExport = () => {
-    const backup = exportAllData({ expenses, goals, incomes, budgets });
+    const backup = exportAllData({ expenses, goals, incomes, budgets, debts, recurringExpenses: recurring });
     downloadBackup(backup);
     toast.success(t('backupDownloaded'));
   };
@@ -137,6 +143,28 @@ const Index = () => {
           }));
           count++;
         }
+        for (const d of data.debts || []) {
+          const item = d as Record<string, unknown>;
+          if (!item || typeof item !== 'object') continue;
+          const { id: _id, ...rest } = item;
+          await addDoc(collection(db, 'debts'), sanitizeForFirestore({
+            ...rest,
+            schemaVersion: '1.0',
+            createdAt: rest.createdAt ? new Date(String(rest.createdAt)) : serverTimestamp(),
+          }));
+          count++;
+        }
+        for (const r of data.recurringExpenses || []) {
+          const item = r as Record<string, unknown>;
+          if (!item || typeof item !== 'object') continue;
+          const { id: _id, ...rest } = item;
+          await addDoc(collection(db, 'recurringExpenses'), sanitizeForFirestore({
+            ...rest,
+            schemaVersion: '1.0',
+            createdAt: rest.createdAt ? new Date(String(rest.createdAt)) : serverTimestamp(),
+          }));
+          count++;
+        }
         toast.success(`${t('dataRestored')}: ${count} ${t('records')}`);
       } catch (err) {
         console.error(err);
@@ -155,7 +183,7 @@ const Index = () => {
       window.removeEventListener('dinerito:export', onExport);
       window.removeEventListener('dinerito:import', onImport);
     };
-  }, [expenses, goals, incomes, budgets, t]);
+  }, [expenses, goals, incomes, budgets, debts, recurring, t]);
 
   const tabIndex = TABS.findIndex(t => t.key === activeTab);
 
@@ -196,7 +224,7 @@ const Index = () => {
     );
   }
 
-  const hasAnyData = expenses.length > 0 || goals.length > 0 || incomes.length > 0 || budgets.length > 0;
+  const hasAnyData = expenses.length > 0 || goals.length > 0 || incomes.length > 0 || budgets.length > 0 || debts.length > 0 || recurring.length > 0;
   if (error && !hasAnyData) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-8">
@@ -273,7 +301,30 @@ const Index = () => {
         <div className="transition-all duration-300 ease-out">
           {activeTab === 'add' && <ExpenseForm onExpenseAdded={addExpense} />}
           {activeTab === 'dashboard' && <Dashboard expenses={expenses} onUpdateExpense={updateExpense} onDeleteExpense={removeExpense} />}
-          {activeTab === 'gastometer' && <GastometerSection expenses={expenses} incomes={incomes} />}
+          {activeTab === 'gastometer' && (
+            <GastometerSection
+              expenses={expenses}
+              incomes={incomes}
+              goals={goals}
+              budgets={budgets}
+              debts={debts}
+              recurring={recurring}
+            />
+          )}
+          {activeTab === 'debts' && (
+            <DebtSection
+              debts={debts}
+              recurring={recurring}
+              expenses={expenses}
+              incomes={incomes}
+              onAddDebt={addDebt}
+              onUpdateDebt={updateDebt}
+              onRemoveDebt={removeDebt}
+              onAddRecurring={addRecurring}
+              onUpdateRecurring={updateRecurring}
+              onRemoveRecurring={removeRecurring}
+            />
+          )}
           {activeTab === 'income' && <IncomeSection incomes={incomes} expenses={expenses} onAddIncome={addIncome} onRemoveIncome={removeIncome} />}
           {activeTab === 'budgets' && <BudgetSection budgets={budgets} expenses={expenses} onAddBudget={addBudget} onRemoveBudget={removeBudget} />}
           {activeTab === 'goals' && <GoalsSection goals={goals} onAddGoal={addGoal} onUpdateGoal={updateGoal} onRemoveGoal={removeGoal} />}

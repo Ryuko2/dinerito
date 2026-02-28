@@ -3,7 +3,7 @@
  * Handles old data structures and missing fields gracefully.
  * DO NOT delete old data - only add defaults for missing fields.
  */
-import type { Expense, SavingsGoal, Income, Budget } from "./types";
+import type { Expense, SavingsGoal, Income, Budget, Debt, RecurringExpense } from "./types";
 
 const CATEGORIES = ["Comida", "Transporte", "Entretenimiento", "Ropa", "Salud", "Hogar", "Educacion", "Regalos", "Suscripciones", "Otro"] as const;
 const GOAL_ICONS = ["Car", "Home", "Plane", "Laptop", "Smartphone", "GraduationCap", "Gem", "Guitar", "Palmtree", "Target"] as const;
@@ -85,6 +85,37 @@ export function normalizeBudget(raw: Record<string, unknown>, id: string): Budge
   };
 }
 
+export function normalizeDebt(raw: Record<string, unknown>, id: string): Debt {
+  const person = raw.person === "girlfriend" ? "girlfriend" : raw.person === "boyfriend" ? "boyfriend" : "all";
+  return {
+    id,
+    name: typeof raw.name === "string" ? raw.name : String(raw.name ?? ""),
+    totalAmount: typeof raw.totalAmount === "number" ? raw.totalAmount : Number(raw.totalAmount) || 0,
+    amountPaid: typeof raw.amountPaid === "number" ? raw.amountPaid : Number(raw.amountPaid) || 0,
+    person,
+    dueDate: typeof raw.dueDate === "string" && raw.dueDate ? raw.dueDate : undefined,
+    notes: typeof raw.notes === "string" && raw.notes ? raw.notes : undefined,
+    createdAt: toIsoString(raw.createdAt),
+  };
+}
+
+export function normalizeRecurringExpense(raw: Record<string, unknown>, id: string): RecurringExpense {
+  const person = raw.person === "girlfriend" ? "girlfriend" : raw.person === "boyfriend" ? "boyfriend" : "all";
+  const frequency = raw.frequency === "weekly" || raw.frequency === "biweekly" ? raw.frequency : "monthly";
+  const category = typeof raw.category === "string" && CATEGORIES.includes(raw.category as typeof CATEGORIES[number]) ? raw.category : "Suscripciones";
+  return {
+    id,
+    name: typeof raw.name === "string" ? raw.name : String(raw.name ?? ""),
+    amount: typeof raw.amount === "number" ? raw.amount : Number(raw.amount) || 0,
+    category,
+    person,
+    frequency,
+    startDate: toDateString(raw.startDate),
+    active: raw.active !== false,
+    createdAt: toIsoString(raw.createdAt),
+  };
+}
+
 export function normalizeDocument(
   collectionName: string,
   raw: Record<string, unknown>,
@@ -99,6 +130,10 @@ export function normalizeDocument(
       return normalizeIncome(raw, id) as unknown as Record<string, unknown>;
     case "budgets":
       return normalizeBudget(raw, id) as unknown as Record<string, unknown>;
+    case "debts":
+      return normalizeDebt(raw, id) as unknown as Record<string, unknown>;
+    case "recurringExpenses":
+      return normalizeRecurringExpense(raw, id) as unknown as Record<string, unknown>;
     default:
       return { ...raw, id };
   }

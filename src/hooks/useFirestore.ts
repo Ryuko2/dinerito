@@ -29,6 +29,8 @@ const COLLECTION_TO_KEY: Record<string, CollectionStorageKey> = {
   goals: "goals",
   incomes: "incomes",
   budgets: "budgets",
+  debts: "debts",
+  recurringExpenses: "recurringExpenses",
 };
 
 function getStorageKey(collectionName: string): CollectionStorageKey | null {

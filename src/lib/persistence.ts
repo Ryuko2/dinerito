@@ -18,11 +18,13 @@ export const STORAGE_KEYS = {
   goals: 'sheriff-goals-v2',
   incomes: 'sheriff-incomes-v2',
   budgets: 'sheriff-budgets-v2',
+  debts: 'sheriff-debts-v2',
+  recurringExpenses: 'sheriff-recurring-v2',
   migrated: 'sheriff-migrated-v1',
   schemaVersion: 'sheriff-schema-version',
 } as const;
 
-export type CollectionStorageKey = 'expenses' | 'goals' | 'incomes' | 'budgets';
+export type CollectionStorageKey = 'expenses' | 'goals' | 'incomes' | 'budgets' | 'debts' | 'recurringExpenses';
 
 // Legacy keys (pre-Firestore migration)
 const LEGACY_KEYS = {
@@ -37,6 +39,8 @@ export interface PersistedData {
   goals: unknown[];
   incomes: unknown[];
   budgets: unknown[];
+  debts?: unknown[];
+  recurringExpenses?: unknown[];
 }
 
 export function saveToLocal<T>(key: keyof typeof STORAGE_KEYS, data: T[]): void {
@@ -100,6 +104,8 @@ export function exportAllData(data: {
   goals: unknown[];
   incomes: unknown[];
   budgets: unknown[];
+  debts?: unknown[];
+  recurringExpenses?: unknown[];
 }): PersistedData {
   return {
     dataVersion: DATA_SCHEMA_VERSION,
@@ -108,6 +114,8 @@ export function exportAllData(data: {
     goals: data.goals,
     incomes: data.incomes,
     budgets: data.budgets,
+    debts: data.debts ?? [],
+    recurringExpenses: data.recurringExpenses ?? [],
   };
 }
 

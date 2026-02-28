@@ -86,3 +86,28 @@ export const CARDS: CardOption[] = [
 export const GOAL_ICONS = [
   'Car', 'Home', 'Plane', 'Laptop', 'Smartphone', 'GraduationCap', 'Gem', 'Guitar', 'Palmtree', 'Target'
 ] as const;
+
+export type RecurrenceFrequency = 'weekly' | 'biweekly' | 'monthly';
+
+export interface Debt {
+  id: string;
+  name: string;
+  totalAmount: number;
+  amountPaid: number;
+  person: Person | 'all';
+  dueDate?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface RecurringExpense {
+  id: string;
+  name: string;
+  amount: number;
+  category: string;
+  person: Person | 'all';
+  frequency: RecurrenceFrequency;
+  startDate: string;
+  active: boolean;
+  createdAt: string;
+}
