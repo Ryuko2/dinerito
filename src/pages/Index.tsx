@@ -32,6 +32,8 @@ import GastometerSection from '@/components/GastometerSection';
 import DebtSection from '@/components/DebtSection';
 import SettingsPage from '@/components/SettingsPage';
 import { useI18n } from '@/lib/i18n';
+import { getEarnedAchievements } from '@/lib/achievements';
+import ProfileDialog from '@/components/ProfileDialog';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 
 const TABS = [
@@ -51,7 +53,9 @@ const Index = () => {
   const { locale, setLocale, t } = useI18n();
   const isOnline = useConnectionStatus();
   const [activeTab, setActiveTab] = useState<TabKey>('add');
-  const [avatarViewer, setAvatarViewer] = useState<string | null>(null);
+  const [profilePerson, setProfilePerson] = useState<'boyfriend' | 'girlfriend' | null>(null);
+  const [profileAvatar, setProfileAvatar] = useState<string>('');
+  const prevEarnedIds = useRef<Set<string>>(new Set());
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
@@ -61,6 +65,26 @@ const Index = () => {
       if (didMigrate) toast.success(t('dataRecovered'));
     });
   }, [t]);
+
+  const achievementData = { expenses, incomes, goals, budgets };
+
+  useEffect(() => {
+    if (!expenses.length && !incomes.length) return;
+    const data = { expenses, incomes, goals, budgets };
+    const earned = getEarnedAchievements(data);
+    const earnedIds = new Set(earned.map(a => a.id));
+
+    earned.forEach(a => {
+      if (!prevEarnedIds.current.has(a.id) && prevEarnedIds.current.size > 0) {
+        toast.success(`🏆 ¡Logro desbloqueado! ${a.icon} ${a.name}`, {
+          duration: 5000,
+          description: a.description,
+        });
+      }
+    });
+
+    prevEarnedIds.current = earnedIds;
+  }, [expenses, incomes, goals, budgets]);
 
   const { data: expenses, loading: el, error: ee, add: addExpense, update: updateExpense, remove: removeExpense } =
     useCollection<Expense>('expenses', [orderBy('createdAt', 'desc')]);
@@ -285,8 +309,8 @@ const Index = () => {
                 </div>
               </PopoverContent>
             </Popover>
-            <img src={sheriffBoy} alt="Kevin" className="w-9 h-9 rounded-full ring-2 ring-primary/20 cursor-pointer transition-transform hover:scale-105" onClick={() => setAvatarViewer(sheriffBoy)} />
-            <img src={sheriffGirl} alt="Angeles" className="w-9 h-9 rounded-full ring-2 ring-accent/20 cursor-pointer transition-transform hover:scale-105" onClick={() => setAvatarViewer(sheriffGirl)} />
+            <img src={sheriffBoy} alt="Kevin" className="w-9 h-9 rounded-full ring-2 ring-primary/20 cursor-pointer transition-transform hover:scale-105" onClick={() => { setProfilePerson('boyfriend'); setProfileAvatar(sheriffBoy); }} />
+            <img src={sheriffGirl} alt="Angeles" className="w-9 h-9 rounded-full ring-2 ring-accent/20 cursor-pointer transition-transform hover:scale-105" onClick={() => { setProfilePerson('girlfriend'); setProfileAvatar(sheriffGirl); }} />
           </div>
         </div>
       </header>
@@ -353,13 +377,13 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* Avatar viewer */}
-      <Dialog open={!!avatarViewer} onOpenChange={() => setAvatarViewer(null)}>
-        <DialogContent className="max-w-xs p-2 rounded-2xl" aria-describedby={undefined}>
-          <DialogTitle className="sr-only">Ver avatar</DialogTitle>
-          {avatarViewer && <img src={avatarViewer} alt="Avatar" className="w-full rounded-xl" />}
-        </DialogContent>
-      </Dialog>
+      <ProfileDialog
+        open={!!profilePerson}
+        onClose={() => setProfilePerson(null)}
+        person={profilePerson}
+        avatarSrc={profileAvatar}
+        data={achievementData}
+      />
     </div>
   );
 };

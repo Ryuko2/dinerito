@@ -175,6 +175,8 @@ export const translations = {
     addRecurringHint: 'Añade subscripciones, renta, etc.',
     pause: 'Pausar',
     activate: 'Activar',
+    profileOf: 'Perfil de',
+    achievementsUnlocked: 'logros desbloqueados',
   },
   en: {
     appTitle: 'Expense Sheriff',
@@ -346,6 +348,8 @@ export const translations = {
     addRecurringHint: 'Add subscriptions, rent, etc.',
     pause: 'Pause',
     activate: 'Activate',
+    profileOf: 'Profile of',
+    achievementsUnlocked: 'achievements unlocked',
   },
 } as const;
 
