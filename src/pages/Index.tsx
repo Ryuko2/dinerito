@@ -33,13 +33,13 @@ import { useI18n } from '@/lib/i18n';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 
 const TABS = [
-  { key: 'add', label: 'Agregar', labelEn: 'Add', icon: PlusCircle },
-  { key: 'dashboard', label: 'Dashboard', labelEn: 'Dashboard', icon: BarChart3 },
-  { key: 'gastometer', label: 'Gastómetro', labelEn: 'Gastometer', icon: Thermometer },
-  { key: 'income', label: 'Ingresos', labelEn: 'Income', icon: DollarSign },
-  { key: 'budgets', label: 'Presupuestos', labelEn: 'Budgets', icon: PieChart },
-  { key: 'goals', label: 'Metas', labelEn: 'Goals', icon: Target },
-  { key: 'settings', label: 'Ajustes', labelEn: 'Settings', icon: Settings },
+  { key: 'add', labelKey: 'add' as const, icon: PlusCircle },
+  { key: 'dashboard', labelKey: 'dashboard' as const, icon: BarChart3 },
+  { key: 'gastometer', labelKey: 'gastometer' as const, icon: Thermometer },
+  { key: 'income', labelKey: 'income' as const, icon: DollarSign },
+  { key: 'budgets', labelKey: 'budgets' as const, icon: PieChart },
+  { key: 'goals', labelKey: 'goals' as const, icon: Target },
+  { key: 'settings', labelKey: 'settings' as const, icon: Settings },
 ] as const;
 
 type TabKey = typeof TABS[number]['key'];
@@ -55,9 +55,9 @@ const Index = () => {
   // One-time migration: recover data from old localStorage keys
   useEffect(() => {
     runLegacyMigration().then((didMigrate) => {
-      if (didMigrate) toast.success('Datos recuperados correctamente.');
+      if (didMigrate) toast.success(t('dataRecovered'));
     });
-  }, []);
+  }, [t]);
 
   const { data: expenses, loading: el, error: ee, add: addExpense, update: updateExpense, remove: removeExpense } =
     useCollection<Expense>('expenses', [orderBy('createdAt', 'desc')]);
@@ -74,7 +74,7 @@ const Index = () => {
   const handleExport = () => {
     const backup = exportAllData({ expenses, goals, incomes, budgets });
     downloadBackup(backup);
-    toast.success('Respaldo descargado.');
+    toast.success(t('backupDownloaded'));
   };
 
   const handleImport = async () => {
@@ -88,7 +88,7 @@ const Index = () => {
         const text = await file.text();
         const data = importData(text);
         if (!data) {
-          toast.error('Archivo no válido.');
+          toast.error(t('invalidFile'));
           return;
         }
         let count = 0;
@@ -136,10 +136,10 @@ const Index = () => {
           }));
           count++;
         }
-        toast.success(`Datos restaurados: ${count} registros.`);
+        toast.success(`${t('dataRestored')}: ${count} ${t('records')}`);
       } catch (err) {
         console.error(err);
-        toast.error('Error al importar.');
+        toast.error(t('errorImporting'));
       }
     };
     input.click();
@@ -154,7 +154,7 @@ const Index = () => {
       window.removeEventListener('dinerito:export', onExport);
       window.removeEventListener('dinerito:import', onImport);
     };
-  }, [expenses, goals, incomes, budgets]);
+  }, [expenses, goals, incomes, budgets, t]);
 
   const tabIndex = TABS.findIndex(t => t.key === activeTab);
 
@@ -189,7 +189,7 @@ const Index = () => {
           <div className="relative">
             <div className="animate-spin h-10 w-10 border-[3px] border-primary/30 border-t-primary rounded-full" />
           </div>
-          <p className="text-muted-foreground text-sm font-medium">Cargando...</p>
+          <p className="text-muted-foreground text-sm font-medium">{t('loading')}</p>
         </div>
       </div>
     );
@@ -201,8 +201,8 @@ const Index = () => {
       <div className="min-h-screen bg-background flex items-center justify-center p-8">
         <div className="flex flex-col items-center gap-3 text-destructive text-center">
           <AlertIcon />
-          <p className="font-medium">Error al cargar datos.</p>
-          <p className="text-sm text-muted-foreground">Revisa tu conexion y la configuracion de Firebase.</p>
+          <p className="font-medium">{t('errorLoading2')}</p>
+          <p className="text-sm text-muted-foreground">{t('checkConnection2')}</p>
         </div>
       </div>
     );
@@ -213,12 +213,12 @@ const Index = () => {
       {!isOnline && (
         <div className="bg-destructive/15 text-destructive text-center py-1.5 text-xs font-medium px-4 flex items-center justify-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-destructive animate-pulse shrink-0" />
-          Sin conexión — los datos se sincronizarán cuando vuelva la conexión
+          {t('offlineMsg')}
         </div>
       )}
       {isOnline && error && hasAnyData && (
         <div className="bg-amber-500/15 text-amber-800 dark:text-amber-200 text-center py-1.5 text-xs font-medium px-4">
-          Mostrando datos guardados. Revisa tu conexión para sincronizar con la nube.
+          {t('syncMsg')}
         </div>
       )}
       {/* Header */}
@@ -229,8 +229,8 @@ const Index = () => {
               <Target className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-extrabold leading-tight tracking-tight">Sheriff de Gastos</h1>
-              <p className="text-[10px] text-muted-foreground font-medium tracking-wide">Kevin & Angeles</p>
+              <h1 className="text-lg font-extrabold leading-tight tracking-tight">{t('appName')}</h1>
+              <p className="text-[10px] text-muted-foreground font-medium tracking-wide">{t('appSubtitle')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -281,7 +281,7 @@ const Index = () => {
       {/* Bottom tab bar - iOS style */}
       <nav className="fixed bottom-0 left-0 right-0 glass border-t safe-area-pb z-20" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 8px)' }}>
         <div className="max-w-2xl mx-auto flex">
-          {TABS.map(({ key, label, labelEn, icon: Icon }) => (
+          {TABS.map(({ key, labelKey, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
@@ -290,7 +290,7 @@ const Index = () => {
               }`}
             >
               <Icon className={`h-5 w-5 transition-colors ${activeTab === key ? 'drop-shadow-sm' : ''}`} strokeWidth={activeTab === key ? 2.5 : 1.8} />
-              <span className={`text-[10px] ${activeTab === key ? 'font-bold' : 'font-medium'}`}>{locale === 'es' ? label : labelEn}</span>
+              <span className={`text-[10px] ${activeTab === key ? 'font-bold' : 'font-medium'}`}>{t(labelKey)}</span>
               {activeTab === key && (
                 <span className="w-1 h-1 rounded-full bg-primary mt-0.5" />
               )}

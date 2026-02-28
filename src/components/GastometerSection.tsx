@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Expense, Income, PERSON_NAMES } from '@/lib/types';
+import { useFormatCurrency } from '@/lib/settings';
+import { useI18n } from '@/lib/i18n';
 import { Thermometer, TrendingUp, TrendingDown } from 'lucide-react';
 import sheriffBoy from '@/assets/sheriff-boy.png';
 import sheriffGirl from '@/assets/sheriff-girl.png';
@@ -20,6 +22,8 @@ function getThermoStatus(ratio: number): ThermoStatus {
 }
 
 export default function GastometerSection({ expenses, incomes }: Props) {
+  const { t } = useI18n();
+  const fmt = useFormatCurrency();
   const totalIncome = useMemo(() => incomes.reduce((s, i) => s + i.amount, 0), [incomes]);
   const totalExpenses = useMemo(() => expenses.reduce((s, e) => s + e.amount, 0), [expenses]);
   const ratio = totalIncome > 0 ? totalExpenses / totalIncome : 0;
@@ -35,13 +39,11 @@ export default function GastometerSection({ expenses, incomes }: Props) {
     return { boyfriend: calc('boyfriend'), girlfriend: calc('girlfriend') };
   }, [incomes, expenses]);
 
-  const fmt = (n: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
-
   const statusLabels: Record<ThermoStatus, string> = {
-    ok: 'Todo bien',
-    warm: 'Cuidado',
-    hot: 'Al límite',
-    danger: 'Excedido',
+    ok: t('statusOk'),
+    warm: t('statusWarm'),
+    hot: t('statusHot'),
+    danger: t('statusDanger'),
   };
 
   return (
@@ -51,11 +53,11 @@ export default function GastometerSection({ expenses, incomes }: Props) {
           <div className="p-1.5 rounded-lg bg-primary/15">
             <Thermometer className="h-5 w-5 text-primary" />
           </div>
-          Gastómetro
+          {t('gastometer')}
         </h2>
       </div>
 
-      <p className="text-sm text-muted-foreground">Compara tus gastos con tus ingresos</p>
+      <p className="text-sm text-muted-foreground">{t('gastometerDesc')}</p>
 
       <Card className={`border-0 shadow-md overflow-hidden transition-all duration-500 ${
         status === 'ok' ? '' :
@@ -90,7 +92,7 @@ export default function GastometerSection({ expenses, incomes }: Props) {
             </div>
 
             <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Gastos / Ingresos</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('spendingRatio')}</p>
               <p className={`text-lg font-bold ${
                 status === 'ok' ? 'text-accent' :
                 status === 'warm' ? 'text-[hsl(var(--warning))]' :
@@ -105,14 +107,14 @@ export default function GastometerSection({ expenses, incomes }: Props) {
               <div className="flex items-center gap-2 p-3 rounded-xl bg-accent/10">
                 <TrendingUp className="h-5 w-5 text-accent" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground">Ingresos</p>
+                  <p className="text-[10px] text-muted-foreground">{t('incomeLabel')}</p>
                   <p className="font-bold">{fmt(totalIncome)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10">
                 <TrendingDown className="h-5 w-5 text-destructive" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground">Gastos</p>
+                  <p className="text-[10px] text-muted-foreground">{t('expensesLabel')}</p>
                   <p className="font-bold">{fmt(totalExpenses)}</p>
                 </div>
               </div>
@@ -133,10 +135,10 @@ export default function GastometerSection({ expenses, incomes }: Props) {
                   <span className="text-sm font-semibold">{PERSON_NAMES[p]}</span>
                 </div>
                 <div className="space-y-0.5 text-xs">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Ingresos</span><span>{fmt(d.income)}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Gastos</span><span>{fmt(d.expenses)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t('incomeLabel')}</span><span>{fmt(d.income)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t('expensesLabel')}</span><span>{fmt(d.expenses)}</span></div>
                   <div className={`flex justify-between font-semibold ${s === 'danger' ? 'text-destructive' : s === 'hot' ? 'text-orange-500' : ''}`}>
-                    <span>Ratio</span>
+                    <span>{t('ratio')}</span>
                     <span>{(d.ratio * 100).toFixed(0)}%</span>
                   </div>
                 </div>

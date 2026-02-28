@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { SavingsGoal, GOAL_ICONS } from '@/lib/types';
 import { Target, Plus, Trash2, PiggyBank } from 'lucide-react';
 import CategoryIcon from '@/components/CategoryIcon';
+import { useFormatCurrency } from '@/lib/settings';
+import { useI18n } from '@/lib/i18n';
 import { toast } from 'sonner';
 
 type AddGoalFn = (item: { name: string; targetAmount: number; currentAmount: number; icon: string; }) => Promise<unknown>;
@@ -22,6 +24,8 @@ interface Props {
 }
 
 export default function GoalsSection({ goals, onAddGoal, onUpdateGoal, onRemoveGoal }: Props) {
+  const { t } = useI18n();
+  const fmt = useFormatCurrency();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [target, setTarget] = useState('');
@@ -30,16 +34,14 @@ export default function GoalsSection({ goals, onAddGoal, onUpdateGoal, onRemoveG
   const [addAmount, setAddAmount] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const fmt = (n: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
-
   const handleCreate = async () => {
     if (!name.trim() || !target) return;
     setSubmitting(true);
     try {
       await onAddGoal({ name: name.trim().slice(0, 100), targetAmount: parseFloat(target), currentAmount: 0, icon });
-      toast.success('Meta creada.');
+      toast.success(t('goalCreated'));
       setName(''); setTarget(''); setIcon('Target'); setOpen(false);
-    } catch { toast.error('Error al crear meta.'); }
+    } catch { toast.error(t('errorCreatingGoal')); }
     finally { setSubmitting(false); }
   };
 
@@ -49,24 +51,24 @@ export default function GoalsSection({ goals, onAddGoal, onUpdateGoal, onRemoveG
     if (!goal) return;
     try {
       await onUpdateGoal(goalId, { currentAmount: goal.currentAmount + parseFloat(addAmount) });
-      toast.success('Ahorro agregado.');
+      toast.success(t('savingsAdded'));
       setAddAmountId(null); setAddAmount('');
-    } catch { toast.error('Error al abonar.'); }
+    } catch { toast.error(t('errorContributing')); }
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold flex items-center gap-2">
-          <Target className="h-5 w-5 text-primary" /> Metas de Ahorro
+          <Target className="h-5 w-5 text-primary" /> {t('goals')}
         </h2>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" /> Nueva</Button></DialogTrigger>
+          <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" /> {t('newGoal')}</Button></DialogTrigger>
           <DialogContent aria-describedby={undefined}>
-            <DialogHeader><DialogTitle>Nueva Meta</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{t('createGoal')}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Icono</Label>
+                <Label>{t('icon')}</Label>
                 <div className="flex gap-2 flex-wrap">
                   {GOAL_ICONS.map(i => (
                     <button key={i} type="button" onClick={() => setIcon(i)}
@@ -76,9 +78,9 @@ export default function GoalsSection({ goals, onAddGoal, onUpdateGoal, onRemoveG
                   ))}
                 </div>
               </div>
-              <div><Label>Nombre</Label><Input placeholder="Ej: Carro nuevo" value={name} onChange={e => setName(e.target.value)} maxLength={100} /></div>
-              <div><Label>Monto objetivo (MXN)</Label><Input type="number" step="0.01" min="0" placeholder="0.00" value={target} onChange={e => setTarget(e.target.value)} /></div>
-              <Button onClick={handleCreate} className="w-full" disabled={submitting}>{submitting ? 'Creando...' : 'Crear Meta'}</Button>
+              <div><Label>{t('name')}</Label><Input placeholder="Ej: Carro nuevo" value={name} onChange={e => setName(e.target.value)} maxLength={100} /></div>
+              <div><Label>{t('targetAmount')}</Label><Input type="number" step="0.01" min="0" placeholder="0.00" value={target} onChange={e => setTarget(e.target.value)} /></div>
+              <Button onClick={handleCreate} className="w-full" disabled={submitting}>{submitting ? t('creating') : t('createGoal')}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -87,7 +89,7 @@ export default function GoalsSection({ goals, onAddGoal, onUpdateGoal, onRemoveG
       {goals.length === 0 ? (
         <Card><CardContent className="py-12 text-center">
           <PiggyBank className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">Sin metas de ahorro</p>
+          <p className="text-muted-foreground">{t('noGoals')}</p>
         </CardContent></Card>
       ) : (
         <div className="grid gap-3">
@@ -116,7 +118,7 @@ export default function GoalsSection({ goals, onAddGoal, onUpdateGoal, onRemoveG
                         <Button size="sm" variant="ghost" className="h-8" onClick={() => setAddAmountId(null)}>x</Button>
                       </div>
                     ) : (
-                      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setAddAmountId(goal.id)}>Abonar</Button>
+                      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setAddAmountId(goal.id)}>{t('contribute')}</Button>
                     )}
                   </div>
                 </CardContent>

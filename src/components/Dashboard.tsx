@@ -11,6 +11,7 @@ import CategoryIcon from '@/components/CategoryIcon';
 import CardBrandIcon from '@/components/CardBrandIcon';
 import ExpenseEditDialog from '@/components/ExpenseEditDialog';
 import { useSettings, useFormatCurrency } from '@/lib/settings';
+import { useI18n } from '@/lib/i18n';
 import PersonalDashboard from '@/components/PersonalDashboard';
 import sheriffBoy from '@/assets/sheriff-boy.png';
 import sheriffGirl from '@/assets/sheriff-girl.png';
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }: Props) {
+  const { t } = useI18n();
   const { settings } = useSettings();
   const fmt = useFormatCurrency();
   const now = new Date();
@@ -96,7 +98,7 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
           <div className="p-1.5 rounded-lg bg-primary/15">
             <TrendingUp className="h-5 w-5 text-primary" />
           </div>
-          Dashboard
+          {t('dashboard')}
         </h2>
       </div>
 
@@ -105,34 +107,34 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
         <CardContent className="pt-4 pb-4">
           <div className="flex items-center gap-2 mb-3">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Filtros</span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('filters')}</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-xs">Desde</Label>
+              <Label className="text-xs">{t('from')}</Label>
               <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-8 text-xs" />
             </div>
             <div>
-              <Label className="text-xs">Hasta</Label>
+              <Label className="text-xs">{t('to')}</Label>
               <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-8 text-xs" />
             </div>
             <div>
-              <Label className="text-xs">Persona</Label>
+              <Label className="text-xs">{t('person')}</Label>
               <Select value={filterPerson} onValueChange={setFilterPerson}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="all">{t('all')}</SelectItem>
                   <SelectItem value="boyfriend">{PERSON_NAMES.boyfriend}</SelectItem>
                   <SelectItem value="girlfriend">{PERSON_NAMES.girlfriend}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Tarjeta</Label>
+              <Label className="text-xs">{t('card')}</Label>
               <Select value={filterCard} onValueChange={setFilterCard}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="all">{t('allFem')}</SelectItem>
                   {CARDS.map(c => (
                     <SelectItem key={c.value} value={c.value}>
                       <span className="flex items-center gap-2">
@@ -145,11 +147,11 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Categoria</Label>
+              <Label className="text-xs">{t('category')}</Label>
               <Select value={filterCategory} onValueChange={setFilterCategory}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="all">{t('allFem')}</SelectItem>
                   {CATEGORIES.map(c => (
                     <SelectItem key={c} value={c}>
                       <span className="flex items-center gap-2">
@@ -162,13 +164,13 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Tipo pago</Label>
+              <Label className="text-xs">{t('paymentTypeLabel')}</Label>
               <Select value={filterPaymentType} onValueChange={setFilterPaymentType}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="credito">Credito</SelectItem>
-                  <SelectItem value="debito">Debito</SelectItem>
+                  <SelectItem value="all">{t('all')}</SelectItem>
+                  <SelectItem value="credito">{t('credit')}</SelectItem>
+                  <SelectItem value="debito">{t('debit')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -184,7 +186,7 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
               <Wallet className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Total</p>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">{t('total')}</p>
               <p className="text-xl font-bold">{fmt(total)}</p>
             </div>
           </CardContent>
@@ -224,12 +226,12 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
         <Card className="border-0 shadow-md">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-primary" /> Por Categoria
+              <CreditCard className="h-4 w-4 text-primary" /> {t('byCategory')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {byCategory.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8 text-sm">Sin gastos registrados</p>
+              <p className="text-muted-foreground text-center py-8 text-sm">{t('noExpenses')}</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
@@ -252,12 +254,12 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
         <Card className="border-0 shadow-md">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-primary" /> Tendencia
+              <TrendingUp className="h-4 w-4 text-primary" /> {t('trend')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {byMonth.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8 text-sm">Sin gastos registrados</p>
+              <p className="text-muted-foreground text-center py-8 text-sm">{t('noExpenses')}</p>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={byMonth}>
@@ -276,7 +278,7 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
       {filtered.length > 0 && (
         <Card className="border-0 shadow-md">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Gastos ({filtered.length})</CardTitle>
+            <CardTitle className="text-sm">{t('expenses')} ({filtered.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-1.5 max-h-[60vh] overflow-y-auto overscroll-contain">
@@ -304,7 +306,7 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
                       <div className="flex flex-wrap gap-1 mt-1">
                         {e.paymentType && (
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-medium">
-                            {e.paymentType === 'credito' ? '💳 Crédito' : '💳 Débito'}
+                            {e.paymentType === 'credito' ? `💳 ${t('credit')}` : `💳 ${t('debit')}`}
                           </span>
                         )}
                         {e.brand && (

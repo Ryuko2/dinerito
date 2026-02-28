@@ -19,6 +19,7 @@ import { Expense, CATEGORIES, CARDS, Person, PERSON_NAMES, PaymentType } from '@
 import CategoryIcon from '@/components/CategoryIcon';
 import CardBrandIcon from '@/components/CardBrandIcon';
 import { CheckCircle2 } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 import { toast } from 'sonner';
 
 interface Props {
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdate, onDelete }: Props) {
+  const { t } = useI18n();
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -75,7 +77,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
       });
       setSuccessDialogOpen(true);
     } catch {
-      toast.error('Error al actualizar.');
+      toast.error(t('errorUpdating'));
     } finally {
       setSaving(false);
     }
@@ -90,10 +92,10 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
     setConfirmDeleteOpen(false);
     try {
       await onDelete(expense.id);
-      toast.success('Gasto eliminado.');
+      toast.success(t('expenseDeleted'));
       onOpenChange(false);
     } catch {
-      toast.error('Error al eliminar.');
+      toast.error(t('errorDeleting'));
     }
   };
 
@@ -101,26 +103,26 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle>Editar Gasto</DialogTitle>
+          <DialogTitle>{t('editExpense')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs">Monto</Label>
+              <Label className="text-xs">{t('amount')}</Label>
               <Input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Fecha</Label>
+              <Label className="text-xs">{t('date')}</Label>
               <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Descripcion</Label>
+            <Label className="text-xs">{t('description')}</Label>
             <Input value={description} onChange={e => setDescription(e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs">Categoria</Label>
+              <Label className="text-xs">{t('category')}</Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -133,7 +135,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Tarjeta</Label>
+              <Label className="text-xs">{t('card')}</Label>
               <Select value={card} onValueChange={setCard}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -151,7 +153,7 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs">Pagado por</Label>
+              <Label className="text-xs">{t('paidBy')}</Label>
               <Select value={paidBy} onValueChange={v => setPaidBy(v as Person)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -161,30 +163,30 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Tipo de pago</Label>
+              <Label className="text-xs">{t('paymentType')}</Label>
               <Select value={paymentType || 'none'} onValueChange={v => setPaymentType(v === 'none' ? '' : v as PaymentType)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">—</SelectItem>
-                  <SelectItem value="credito">Credito</SelectItem>
-                  <SelectItem value="debito">Debito</SelectItem>
+                  <SelectItem value="credito">{t('credit')}</SelectItem>
+                  <SelectItem value="debito">{t('debit')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Marca / Tienda</Label>
+            <Label className="text-xs">{t('brand')}</Label>
             <Input value={brand} onChange={e => setBrand(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Gasto de alguien más (opcional)</Label>
-            <Input placeholder="Nombre" value={thirdPartyName} onChange={e => setThirdPartyName(e.target.value)} maxLength={50} />
+            <Label className="text-xs">{t('expenseForSomeone')} {t('optional')}</Label>
+            <Input placeholder={t('name')} value={thirdPartyName} onChange={e => setThirdPartyName(e.target.value)} maxLength={50} />
           </div>
           <div className="flex gap-2 pt-2">
             <Button onClick={handleSave} className="flex-1 rounded-xl" disabled={saving}>
-              {saving ? 'Guardando...' : 'Guardar'}
+              {saving ? t('saving2') : t('save')}
             </Button>
-            <Button variant="destructive" onClick={() => setConfirmDeleteOpen(true)} className="rounded-xl">Eliminar</Button>
+            <Button variant="destructive" onClick={() => setConfirmDeleteOpen(true)} className="rounded-xl">{t('deleteExpense')}</Button>
           </div>
         </div>
       </DialogContent>
@@ -192,13 +194,13 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
       <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar este gasto?</AlertDialogTitle>
-            <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+            <AlertDialogTitle>{t('confirmDeleteExpense')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('confirmDeleteDesc')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Eliminar
+              {t('deleteExpense')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -212,16 +214,16 @@ export default function ExpenseEditDialog({ expense, open, onOpenChange, onUpdat
                 <CheckCircle2 className="h-10 w-10 text-accent" />
               </div>
               <AlertDialogTitle className="text-center text-lg">
-                Gasto guardado correctamente
+                {t('expenseSaved')}
               </AlertDialogTitle>
               <AlertDialogDescription className="text-center">
-                Los cambios han sido guardados exitosamente.
+                {t('changesSaved')}
               </AlertDialogDescription>
             </div>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center">
             <AlertDialogAction onClick={handleSuccessContinue} className="w-full rounded-xl h-11 text-base font-bold">
-              Continuar
+              {t('continue')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

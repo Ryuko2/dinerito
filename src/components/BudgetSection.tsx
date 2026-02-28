@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Budget, Expense, CATEGORIES, PERSON_NAMES, Person } from '@/lib/types';
 import { PieChart as PieChartIcon, Plus, Trash2, AlertTriangle, AlertCircle } from 'lucide-react';
 import CategoryIcon from '@/components/CategoryIcon';
+import { useFormatCurrency } from '@/lib/settings';
+import { useI18n } from '@/lib/i18n';
 import { toast } from 'sonner';
 
 interface Props {
@@ -38,9 +40,10 @@ function getPeriodDates(period: Budget['period']): { from: string; to: string } 
   return { from: `${y}-${String(m + 1).padStart(2, '0')}-01`, to: `${y}-${String(m + 1).padStart(2, '0')}-${String(new Date(y, m + 1, 0).getDate()).padStart(2, '0')}` };
 }
 
-const PERIOD_LABELS: Record<string, string> = { weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual' };
 
 export default function BudgetSection({ budgets, expenses, onAddBudget, onRemoveBudget }: Props) {
+  const { t } = useI18n();
+  const fmt = useFormatCurrency();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [category, setCategory] = useState('all');
@@ -48,8 +51,6 @@ export default function BudgetSection({ budgets, expenses, onAddBudget, onRemove
   const [limit, setLimit] = useState('');
   const [period, setPeriod] = useState<Budget['period']>('monthly');
   const [submitting, setSubmitting] = useState(false);
-
-  const fmt = (n: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
 
   const budgetProgress = useMemo(() => {
     return budgets.map(b => {
@@ -78,9 +79,9 @@ export default function BudgetSection({ budgets, expenses, onAddBudget, onRemove
     setSubmitting(true);
     try {
       await onAddBudget({ name: name.trim(), category, person, limitAmount: parseFloat(limit), period });
-      toast.success('Presupuesto creado.');
+      toast.success(t('budgetCreated'));
       setName(''); setCategory('all'); setPerson('all'); setLimit(''); setOpen(false);
-    } catch { toast.error('Error al crear.'); }
+    } catch { toast.error(t('errorCreating')); }
     finally { setSubmitting(false); }
   };
 
@@ -88,38 +89,38 @@ export default function BudgetSection({ budgets, expenses, onAddBudget, onRemove
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold flex items-center gap-2">
-          <PieChartIcon className="h-5 w-5 text-primary" /> Presupuestos
+          <PieChartIcon className="h-5 w-5 text-primary" /> {t('budgets')}
         </h2>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" /> Nuevo</Button></DialogTrigger>
+          <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" /> {t('newBudget')}</Button></DialogTrigger>
           <DialogContent aria-describedby={undefined}>
-            <DialogHeader><DialogTitle>Crear Presupuesto</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{t('createBudget')}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div><Label className="text-xs">Nombre</Label><Input placeholder="Ej: Comida mensual" value={name} onChange={e => setName(e.target.value)} maxLength={50} /></div>
+              <div><Label className="text-xs">{t('name')}</Label><Input placeholder="Ej: Comida mensual" value={name} onChange={e => setName(e.target.value)} maxLength={50} /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label className="text-xs">Categoria</Label>
+                <div><Label className="text-xs">{t('category')}</Label>
                   <Select value={category} onValueChange={setCategory}>
                     <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="all">Todas</SelectItem>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                    <SelectContent><SelectItem value="all">{t('allFem')}</SelectItem>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div><Label className="text-xs">Persona</Label>
+                <div><Label className="text-xs">{t('person')}</Label>
                   <Select value={person} onValueChange={v => setPerson(v as Person | 'all')}>
                     <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="all">Todos</SelectItem><SelectItem value="boyfriend">{PERSON_NAMES.boyfriend}</SelectItem><SelectItem value="girlfriend">{PERSON_NAMES.girlfriend}</SelectItem></SelectContent>
+                    <SelectContent><SelectItem value="all">{t('all')}</SelectItem><SelectItem value="boyfriend">{PERSON_NAMES.boyfriend}</SelectItem><SelectItem value="girlfriend">{PERSON_NAMES.girlfriend}</SelectItem></SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label className="text-xs">Limite (MXN)</Label><Input type="number" step="0.01" min="0" placeholder="0.00" value={limit} onChange={e => setLimit(e.target.value)} /></div>
-                <div><Label className="text-xs">Periodo</Label>
+                <div><Label className="text-xs">{t('limitMxn')}</Label><Input type="number" step="0.01" min="0" placeholder="0.00" value={limit} onChange={e => setLimit(e.target.value)} /></div>
+                <div><Label className="text-xs">{t('period')}</Label>
                   <Select value={period} onValueChange={v => setPeriod(v as Budget['period'])}>
                     <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="weekly">Semanal</SelectItem><SelectItem value="biweekly">Quincenal</SelectItem><SelectItem value="monthly">Mensual</SelectItem></SelectContent>
+                    <SelectContent><SelectItem value="weekly">{t('weekly')}</SelectItem><SelectItem value="biweekly">{t('biweekly')}</SelectItem><SelectItem value="monthly">{t('monthly')}</SelectItem></SelectContent>
                   </Select>
                 </div>
               </div>
-              <Button onClick={handleCreate} className="w-full" disabled={submitting}>{submitting ? 'Creando...' : 'Crear'}</Button>
+              <Button onClick={handleCreate} className="w-full" disabled={submitting}>{submitting ? t('creating') : t('create')}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -128,7 +129,7 @@ export default function BudgetSection({ budgets, expenses, onAddBudget, onRemove
       {budgetProgress.length === 0 ? (
         <Card><CardContent className="py-10 text-center">
           <PieChartIcon className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Sin presupuestos creados</p>
+          <p className="text-sm text-muted-foreground">{t('noBudgets')}</p>
         </CardContent></Card>
       ) : (
         <div className="grid gap-3">
@@ -141,7 +142,7 @@ export default function BudgetSection({ budgets, expenses, onAddBudget, onRemove
                     <div>
                       <p className="font-bold text-sm">{b.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {PERIOD_LABELS[b.period]}
+                        {t((b.period || 'monthly') as 'weekly'|'biweekly'|'monthly')}
                         {b.person !== 'all' && ` · ${PERSON_NAMES[b.person as Person]}`}
                         {b.category !== 'all' && ` · ${b.category}`}
                       </p>
@@ -156,17 +157,17 @@ export default function BudgetSection({ budgets, expenses, onAddBudget, onRemove
                 <Progress value={Math.min(b.pct, 100)} className={`h-2.5 ${b.pct >= 100 ? '[&>div]:bg-destructive' : b.pct >= 80 ? '[&>div]:bg-[hsl(var(--warning))]' : ''}`} />
                 {b.pct >= 100 && (
                   <div className="flex items-center gap-1.5 mt-2 text-xs text-destructive">
-                    <AlertCircle className="h-3.5 w-3.5" /> Presupuesto excedido
+                    <AlertCircle className="h-3.5 w-3.5" /> {t('budgetExceeded')}
                   </div>
                 )}
                 {b.pct >= 80 && b.pct < 100 && (
                   <div className="flex items-center gap-1.5 mt-2 text-xs text-[hsl(var(--warning))]">
-                    <AlertTriangle className="h-3.5 w-3.5" /> Al 80% del limite
+                    <AlertTriangle className="h-3.5 w-3.5" /> {t('at80Limit')}
                   </div>
                 )}
                 {b.willExceed && b.pct < 80 && (
                   <div className="flex items-center gap-1.5 mt-2 text-xs text-[hsl(var(--warning))]">
-                    <AlertTriangle className="h-3.5 w-3.5" /> Tendencia indica que se excedera
+                    <AlertTriangle className="h-3.5 w-3.5" /> {t('trendExceed')}
                   </div>
                 )}
               </CardContent>

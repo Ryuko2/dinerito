@@ -11,6 +11,7 @@ import CategoryIcon from '@/components/CategoryIcon';
 import CardBrandIcon from '@/components/CardBrandIcon';
 import ExpenseEditDialog from '@/components/ExpenseEditDialog';
 import { useSettings, useFormatCurrency } from '@/lib/settings';
+import { useI18n } from '@/lib/i18n';
 import sheriffBoy from '@/assets/sheriff-boy.png';
 import sheriffGirl from '@/assets/sheriff-girl.png';
 
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export default function PersonalDashboard({ person, expenses, onBack, onUpdateExpense, onDeleteExpense }: Props) {
+  const { t } = useI18n();
   const { settings } = useSettings();
   const fmt = useFormatCurrency();
   const now = new Date();
@@ -67,13 +69,13 @@ export default function PersonalDashboard({ person, expenses, onBack, onUpdateEx
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <div><Label className="text-xs">Desde</Label><Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-8 text-xs" /></div>
-        <div><Label className="text-xs">Hasta</Label><Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-8 text-xs" /></div>
-        <div><Label className="text-xs">Tarjeta</Label>
+        <div><Label className="text-xs">{t('from')}</Label><Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-8 text-xs" /></div>
+        <div><Label className="text-xs">{t('to')}</Label><Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-8 text-xs" /></div>
+        <div><Label className="text-xs">{t('card')}</Label>
           <Select value={filterCard} onValueChange={setFilterCard}>
             <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="all">{t('allFem')}</SelectItem>
               {CARDS.map(c => (
                 <SelectItem key={c.value} value={c.value}>
                   <span className="flex items-center gap-2">
@@ -85,11 +87,11 @@ export default function PersonalDashboard({ person, expenses, onBack, onUpdateEx
             </SelectContent>
           </Select>
         </div>
-        <div><Label className="text-xs">Categoria</Label>
+        <div><Label className="text-xs">{t('category')}</Label>
           <Select value={filterCategory} onValueChange={setFilterCategory}>
             <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="all">{t('allFem')}</SelectItem>
               {CATEGORIES.map(c => (
                 <SelectItem key={c} value={c}>
                   <span className="flex items-center gap-2">
@@ -109,16 +111,16 @@ export default function PersonalDashboard({ person, expenses, onBack, onUpdateEx
             <Wallet className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Total gastos</p>
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">{t('total')} {t('expenses')}</p>
             <p className="text-xl font-bold">{fmt(total)}</p>
-            <p className="text-xs text-muted-foreground">{filtered.length} registros</p>
+            <p className="text-xs text-muted-foreground">{filtered.length} {t('records')}</p>
           </div>
         </CardContent>
       </Card>
 
       {byCategory.length > 0 && (
         <Card className="border-0 shadow-md">
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Por Categoria</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{t('byCategory')}</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
@@ -134,7 +136,7 @@ export default function PersonalDashboard({ person, expenses, onBack, onUpdateEx
       )}
 
       <Card className="border-0 shadow-md">
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Gastos</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">{t('expenses')}</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-1.5 max-h-[50vh] overflow-y-auto overscroll-contain">
             {filtered.slice().reverse().map(e => (
@@ -161,7 +163,7 @@ export default function PersonalDashboard({ person, expenses, onBack, onUpdateEx
                     <div className="flex flex-wrap gap-1 mt-1">
                       {e.paymentType && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-medium">
-                          {e.paymentType === 'credito' ? '💳 Crédito' : '💳 Débito'}
+                          {e.paymentType === 'credito' ? `💳 ${t('credit')}` : `💳 ${t('debit')}`}
                         </span>
                       )}
                       {e.brand && (
@@ -178,7 +180,7 @@ export default function PersonalDashboard({ person, expenses, onBack, onUpdateEx
                 <span className="font-bold text-sm shrink-0 ml-2">{fmt(e.amount)}</span>
               </div>
             ))}
-            {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-6">Sin gastos registrados</p>}
+            {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-6">{t('noExpenses')}</p>}
           </div>
         </CardContent>
       </Card>

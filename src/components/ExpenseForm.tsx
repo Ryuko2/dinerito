@@ -15,6 +15,7 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { CATEGORIES, CARDS, Person, PERSON_NAMES, PaymentType } from '@/lib/types';
+import { useI18n } from '@/lib/i18n';
 import { PlusCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import CategoryIcon from '@/components/CategoryIcon';
@@ -39,6 +40,7 @@ interface Props {
 }
 
 export default function ExpenseForm({ onExpenseAdded }: Props) {
+  const { t } = useI18n();
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -74,15 +76,15 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !description || !category || !card || !paidBy) {
-      toast.error('Completa los campos obligatorios.');
+      toast.error(t('completeFields'));
       return;
     }
     if (isThirdParty && thirdPartySelection === 'otro' && !thirdPartyOtherName.trim()) {
-      toast.error('Selecciona la persona o escribe el nombre.');
+      toast.error(t('selectPerson'));
       return;
     }
     if (isThirdParty && !thirdPartySelection) {
-      toast.error('Selecciona la persona o escribe el nombre.');
+      toast.error(t('selectPerson'));
       return;
     }
     setSubmitting(true);
@@ -106,7 +108,7 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
       setSuccessDialogOpen(true);
     } catch (err) {
       console.error(err);
-      toast.error('Error al guardar.');
+      toast.error(t('errorSaving'));
     } finally {
       setSubmitting(false);
     }
@@ -124,14 +126,14 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
           <div className="p-1.5 rounded-lg bg-primary/15">
             <PlusCircle className="h-5 w-5 text-primary" />
           </div>
-          Registrar Gasto
+          {t('registerExpense')}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Who paid */}
           <div className="space-y-2">
-            <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Pagado por</Label>
+            <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('paidBy')}</Label>
             <div className="flex gap-3">
               {([
                 { value: 'boyfriend' as Person, img: sheriffBoy, label: PERSON_NAMES.boyfriend },
@@ -156,7 +158,7 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">Monto (MXN)</Label>
+              <Label className="text-xs">{t('amount')}</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">$</span>
                 <Input
@@ -172,19 +174,19 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Fecha</Label>
+              <Label className="text-xs">{t('date')}</Label>
               <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs">Descripcion</Label>
+            <Label className="text-xs">{t('description')}</Label>
             <Input placeholder="Concepto del gasto" value={description} onChange={e => setDescription(e.target.value)} maxLength={200} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">Categoria</Label>
+              <Label className="text-xs">{t('category')}</Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
                 <SelectContent>
@@ -200,7 +202,7 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Tarjeta / Metodo</Label>
+              <Label className="text-xs">{t('card')}</Label>
               <Select value={card} onValueChange={setCard}>
                 <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
                 <SelectContent>
@@ -219,7 +221,7 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">Tipo de pago <span className="text-muted-foreground">(opcional)</span></Label>
+              <Label className="text-xs">{t('paymentType')} <span className="text-muted-foreground">{t('optional')}</span></Label>
               <Select value={paymentType} onValueChange={v => setPaymentType(v as PaymentType)}>
                 <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                 <SelectContent>
@@ -229,14 +231,14 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Marca / Tienda <span className="text-muted-foreground">(opcional)</span></Label>
+              <Label className="text-xs">{t('brand')} <span className="text-muted-foreground">{t('optional')}</span></Label>
               <Input placeholder="Ej: Oxxo, Amazon" value={brand} onChange={e => setBrand(e.target.value)} maxLength={100} />
             </div>
           </div>
 
           {/* Third party */}
           <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-border/50">
-            <Label className="text-sm">Gasto de alguien mas</Label>
+            <Label className="text-sm">{t('expenseForSomeone')}</Label>
             <Switch checked={isThirdParty} onCheckedChange={(checked) => { setIsThirdParty(checked); if (!checked) { setThirdPartySelection(''); setThirdPartyOtherName(''); } }} />
           </div>
           {isThirdParty && (
@@ -246,7 +248,7 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
                 {([
                   { value: 'kevin' as const, img: sheriffBoy, label: PERSON_NAMES.boyfriend },
                   { value: 'angeles' as const, img: sheriffGirl, label: PERSON_NAMES.girlfriend },
-                  { value: 'otro' as const, label: 'Otro' },
+                  { value: 'otro' as const, label: t('other') },
                 ]).map(({ value, img, label }) => (
                   <button
                     key={value}
@@ -268,7 +270,7 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
           )}
 
           <Button type="submit" className="w-full text-base font-bold h-12 rounded-xl shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30" disabled={submitting}>
-            {submitting ? 'Guardando...' : 'Registrar Gasto'}
+            {submitting ? t('saving2') : t('registerExpenseBtn')}
           </Button>
         </form>
       </CardContent>
@@ -281,16 +283,16 @@ export default function ExpenseForm({ onExpenseAdded }: Props) {
                 <CheckCircle2 className="h-10 w-10 text-accent" />
               </div>
               <AlertDialogTitle className="text-center text-lg">
-                Gasto guardado correctamente
+                {t('expenseSaved')}
               </AlertDialogTitle>
               <AlertDialogDescription className="text-center">
-                Tu gasto ha sido registrado exitosamente.
+                {t('expenseSavedDesc')}
               </AlertDialogDescription>
             </div>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center">
             <AlertDialogAction onClick={handleSuccessContinue} className="w-full rounded-xl h-11 text-base font-bold">
-              Continuar
+              {t('continue')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
