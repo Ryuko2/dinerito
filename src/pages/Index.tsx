@@ -16,6 +16,7 @@ import { Expense, SavingsGoal, Income, Budget } from '@/lib/types';
 import { orderBy } from 'firebase/firestore';
 import { BarChart3, PlusCircle, Target, DollarSign, PieChart, Settings2, Download, Upload, Thermometer, Languages, Settings } from 'lucide-react';
 import { toast } from 'sonner';
+import logo from '@/assets/logo.png';
 import sheriffBoy from '@/assets/sheriff-boy.png';
 import sheriffGirl from '@/assets/sheriff-girl.png';
 import {
@@ -225,9 +226,11 @@ const Index = () => {
       <header className="glass sticky top-0 z-10 border-b">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-xl gradient-primary">
-              <Target className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <img
+              src={logo}
+              alt="La Politzia de Gastos"
+              className="h-10 w-10 rounded-xl object-contain"
+            />
             <div>
               <h1 className="text-lg font-extrabold leading-tight tracking-tight">{t('appName')}</h1>
               <p className="text-[10px] text-muted-foreground font-medium tracking-wide">{t('appSubtitle')}</p>
