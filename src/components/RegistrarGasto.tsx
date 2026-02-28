@@ -120,9 +120,6 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
   useEffect(() => {
     if (!root.current) return;
 
-    // For steps that need the basket, wait for it to be rendered
-    if (currentStep >= 2 && !basketRef.current) return;
-
     // Re-create scope if missing (handles React strict mode double-invoke)
     if (!scope.current) {
       scope.current = createScope({ root: root.current }).add((self) => {
@@ -208,9 +205,7 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
           releaseDamping: 12,
           onGrab: (d) => {
             if (prefersReduced()) return;
-            const target = d.$target;
-            if (!target) return;
-            animate(target, {
+            animate(d.target, {
               scale: 1.12,
               rotate: random(-3, 3),
               boxShadow: '0 10px 30px rgba(92,58,30,0.35)',
@@ -221,10 +216,8 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
           onDrag: (d) => {
             const basket = basketRef.current;
             if (!basket) return;
-            const target = d.$target;
-            if (!target) return;
             const br = basket.getBoundingClientRect();
-            const cr = target.getBoundingClientRect();
+            const cr = d.target.getBoundingClientRect();
             const near =
               cr.left < br.right + 40 &&
               cr.right > br.left - 40 &&
@@ -235,15 +228,14 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
           onRelease: (d) => {
             basketRef.current?.classList.remove('is-drag-over');
             const basket = basketRef.current;
-            const target = d.$target;
-            if (!basket || !target) return;
+            if (!basket) return;
             const br = basket.getBoundingClientRect();
-            const cr = target.getBoundingClientRect();
+            const cr = d.target.getBoundingClientRect();
             const over =
               cr.left < br.right && cr.right > br.left && cr.top < br.bottom && cr.bottom > br.top;
 
             if (over) {
-              const val = (target as HTMLElement)?.dataset.value;
+              const val = (d.target as HTMLElement).dataset.value;
               if (prefersReduced()) {
                 handleChipDropped(val || null);
                 return;
@@ -255,7 +247,7 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
               });
               const cx = br.left + br.width / 2;
               const cy = br.top + br.height / 2;
-              animate(target, {
+              animate(d.target, {
                 x: cx - cr.left - cr.width / 2,
                 y: cy - cr.top - cr.height / 2,
                 scale: [1.1, 0.6],
@@ -266,7 +258,7 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
               });
               if (val === 'otro') setShowOtroInput(true);
             } else if (!prefersReduced()) {
-              animate(target, {
+              animate(d.target, {
                 x: 0,
                 y: 0,
                 scale: 1,
@@ -309,23 +301,21 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
           basket.classList.toggle('is-drag-over', anyNear);
         },
         onGrab: (d) => {
-          if (prefersReduced() || !d.$target) return;
-          animate(d.$target, { scale: 1.1, duration: 200, ease: 'outQuad' });
+          if (!prefersReduced()) animate(d.target, { scale: 1.1, duration: 200, ease: 'outQuad' });
         },
         onRelease: (d) => {
           basketRef.current?.classList.remove('is-drag-over');
           const basket = basketRef.current;
-          const target = d.$target;
-          if (!basket || !target) return;
+          if (!basket) return;
           const br = basket.getBoundingClientRect();
-          const cr = target.getBoundingClientRect();
+          const cr = d.target.getBoundingClientRect();
           const over =
             cr.left < br.right && cr.right > br.left && cr.top < br.bottom && cr.bottom > br.top;
           if (over) {
-            const val = (target as HTMLElement).dataset.value;
+            const val = (d.target as HTMLElement).dataset.value;
             if (!prefersReduced()) {
               animate(basket, { scale: [1, 1.05, 1], duration: 400, ease: 'outElastic(1, .8)' });
-              animate(target, {
+              animate(d.target, {
                 x: br.left + br.width / 2 - cr.left - cr.width / 2,
                 y: br.top + br.height / 2 - cr.top - cr.height / 2,
                 scale: [1.1, 0.6],
@@ -336,7 +326,7 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
               });
             } else handleCategoryDropped(val || null);
           } else if (!prefersReduced()) {
-            animate(target, { x: 0, y: 0, scale: 1, duration: 500, ease: 'outElastic(1, .5)' });
+            animate(d.target, { x: 0, y: 0, scale: 1, duration: 500, ease: 'outElastic(1, .5)' });
           }
         },
       });
@@ -371,17 +361,16 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
         onRelease: (d) => {
           basketRef.current?.classList.remove('is-drag-over');
           const basket = basketRef.current;
-          const target = d.$target;
-          if (!basket || !target) return;
+          if (!basket) return;
           const br = basket.getBoundingClientRect();
-          const cr = target.getBoundingClientRect();
+          const cr = d.target.getBoundingClientRect();
           const over =
             cr.left < br.right && cr.right > br.left && cr.top < br.bottom && cr.bottom > br.top;
           if (over) {
-            const val = (target as HTMLElement).dataset.value;
+            const val = (d.target as HTMLElement).dataset.value;
             if (!prefersReduced()) {
               animate(basket, { scale: [1, 1.05, 1], duration: 400, ease: 'outElastic(1, .8)' });
-              animate(target, {
+              animate(d.target, {
                 x: br.left + br.width / 2 - cr.left - cr.width / 2,
                 y: br.top + br.height / 2 - cr.top - cr.height / 2,
                 scale: [1.1, 0.6],
@@ -392,7 +381,7 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
               });
             } else handleBankDropped(val || null);
           } else if (!prefersReduced()) {
-            animate(target, { x: 0, y: 0, scale: 1, duration: 500, ease: 'outElastic(1, .5)' });
+            animate(d.target, { x: 0, y: 0, scale: 1, duration: 500, ease: 'outElastic(1, .5)' });
           }
         },
       });
@@ -427,21 +416,20 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
         onRelease: (d) => {
           basketRef.current?.classList.remove('is-drag-over');
           const basket = basketRef.current;
-          const target = d.$target;
-          if (!basket || !target) return;
+          if (!basket) return;
           const br = basket.getBoundingClientRect();
-          const cr = target.getBoundingClientRect();
+          const cr = d.target.getBoundingClientRect();
           const over =
             cr.left < br.right && cr.right > br.left && cr.top < br.bottom && cr.bottom > br.top;
           if (over) {
-            const val = (target as HTMLElement).dataset.value as 'credito' | 'debito';
+            const val = (d.target as HTMLElement).dataset.value as 'credito' | 'debito';
             if (!prefersReduced()) {
               animate(basket, {
                 borderColor: ['#C87941', '#7A9E7E', '#C87941'],
                 duration: 600,
                 ease: 'inOutSine',
               });
-              animate(target, {
+              animate(d.target, {
                 x: br.left + br.width / 2 - cr.left - cr.width / 2,
                 y: br.top + br.height / 2 - cr.top - cr.height / 2,
                 scale: [1.1, 0.6],
@@ -452,7 +440,7 @@ export default function RegistrarGasto({ onExpenseAdded, onNavigateToLedger }: P
               });
             } else handlePaymentTypeDropped(val);
           } else if (!prefersReduced()) {
-            animate(target, { x: 0, y: 0, scale: 1, duration: 500, ease: 'outElastic(1, .5)' });
+            animate(d.target, { x: 0, y: 0, scale: 1, duration: 500, ease: 'outElastic(1, .5)' });
           }
         },
       });
