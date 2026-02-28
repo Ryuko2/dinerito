@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import ExpenseForm from '@/components/ExpenseForm';
 import Dashboard from '@/components/Dashboard';
 import GoalsSection from '@/components/GoalsSection';
@@ -66,26 +66,6 @@ const Index = () => {
     });
   }, [t]);
 
-  const achievementData = { expenses, incomes, goals, budgets };
-
-  useEffect(() => {
-    if (!expenses.length && !incomes.length) return;
-    const data = { expenses, incomes, goals, budgets };
-    const earned = getEarnedAchievements(data);
-    const earnedIds = new Set(earned.map(a => a.id));
-
-    earned.forEach(a => {
-      if (!prevEarnedIds.current.has(a.id) && prevEarnedIds.current.size > 0) {
-        toast.success(`🏆 ¡Logro desbloqueado! ${a.icon} ${a.name}`, {
-          duration: 5000,
-          description: a.description,
-        });
-      }
-    });
-
-    prevEarnedIds.current = earnedIds;
-  }, [expenses, incomes, goals, budgets]);
-
   const { data: expenses, loading: el, error: ee, add: addExpense, update: updateExpense, remove: removeExpense } =
     useCollection<Expense>('expenses', [orderBy('createdAt', 'desc')]);
   const { data: goals, loading: gl, error: ge, add: addGoal, update: updateGoal, remove: removeGoal } =
@@ -98,6 +78,28 @@ const Index = () => {
     useCollection<Debt>('debts', [orderBy('createdAt', 'desc')]);
   const { data: recurring, loading: rl, error: re, add: addRecurring, update: updateRecurring, remove: removeRecurring } =
     useCollection<RecurringExpense>('recurringExpenses', [orderBy('createdAt', 'desc')]);
+
+  const achievementData = useMemo(
+    () => ({ expenses, incomes, goals, budgets }),
+    [expenses, incomes, goals, budgets]
+  );
+
+  useEffect(() => {
+    if (!expenses.length && !incomes.length) return;
+    const earned = getEarnedAchievements(achievementData);
+    const earnedIds = new Set(earned.map(a => a.id));
+
+    earned.forEach(a => {
+      if (!prevEarnedIds.current.has(a.id) && prevEarnedIds.current.size > 0) {
+        toast.success(`🏆 ¡Logro desbloqueado! ${a.icon} ${a.name}`, {
+          duration: 5000,
+          description: a.description,
+        });
+      }
+    });
+
+    prevEarnedIds.current = earnedIds;
+  }, [achievementData]);
 
   const loading = el || gl || il || bl || dl || rl;
   const error = ee || ge || ie || be || de || re;
