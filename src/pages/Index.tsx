@@ -49,12 +49,20 @@ const TABS = [
 
 type TabKey = typeof TABS[number]['key'];
 
+const SEEN_KEY = 'sheriff-seen-achievements';
+
 const Index = () => {
   const { locale, setLocale, t } = useI18n();
   const isOnline = useConnectionStatus();
   const [activeTab, setActiveTab] = useState<TabKey>('add');
   const [profilePerson, setProfilePerson] = useState<'boyfriend' | 'girlfriend' | null>(null);
   const [profileAvatar, setProfileAvatar] = useState<string>('');
+  const [seenIds, setSeenIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem(SEEN_KEY);
+      return new Set(stored ? JSON.parse(stored) : []);
+    } catch { return new Set(); }
+  });
   const prevEarnedIds = useRef<Set<string>>(new Set());
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
@@ -83,6 +91,21 @@ const Index = () => {
     () => ({ expenses, incomes, goals, budgets }),
     [expenses, incomes, goals, budgets]
   );
+
+  const markAchievementsSeen = () => {
+    const earned = getEarnedAchievements(achievementData);
+    const ids = earned.map(a => a.id);
+    const newSeen = new Set([...seenIds, ...ids]);
+    setSeenIds(newSeen);
+    try {
+      localStorage.setItem(SEEN_KEY, JSON.stringify([...newSeen]));
+    } catch {}
+  };
+
+  const unSeenCount = useMemo(() => {
+    const earned = getEarnedAchievements(achievementData);
+    return earned.filter(a => !seenIds.has(a.id)).length;
+  }, [achievementData, seenIds]);
 
   useEffect(() => {
     if (!expenses.length && !incomes.length) return;
@@ -311,8 +334,22 @@ const Index = () => {
                 </div>
               </PopoverContent>
             </Popover>
-            <img src={sheriffBoy} alt="Kevin" className="w-9 h-9 rounded-full ring-2 ring-primary/20 cursor-pointer transition-transform hover:scale-105" onClick={() => { setProfilePerson('boyfriend'); setProfileAvatar(sheriffBoy); }} />
-            <img src={sheriffGirl} alt="Angeles" className="w-9 h-9 rounded-full ring-2 ring-accent/20 cursor-pointer transition-transform hover:scale-105" onClick={() => { setProfilePerson('girlfriend'); setProfileAvatar(sheriffGirl); }} />
+            <div className="relative cursor-pointer" onClick={() => { setProfilePerson('boyfriend'); setProfileAvatar(sheriffBoy); markAchievementsSeen(); }}>
+              <img src={sheriffBoy} alt="Kevin" className="w-9 h-9 rounded-full ring-2 ring-primary/20 transition-transform hover:scale-105" />
+              {unSeenCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 shadow-sm animate-bounce">
+                  {unSeenCount}
+                </span>
+              )}
+            </div>
+            <div className="relative cursor-pointer" onClick={() => { setProfilePerson('girlfriend'); setProfileAvatar(sheriffGirl); markAchievementsSeen(); }}>
+              <img src={sheriffGirl} alt="Angeles" className="w-9 h-9 rounded-full ring-2 ring-accent/20 transition-transform hover:scale-105" />
+              {unSeenCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 shadow-sm animate-bounce">
+                  {unSeenCount}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </header>

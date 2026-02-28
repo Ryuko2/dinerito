@@ -46,11 +46,6 @@ export default function ProfileDialog({ open, onClose, person, avatarSrc, data }
               alt={name}
               className="w-24 h-24 rounded-full ring-4 ring-primary/40 shadow-xl mx-auto"
             />
-            {earnedCount > 0 && (
-              <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow">
-                {earnedCount}
-              </div>
-            )}
           </div>
           <h2 className="text-xl font-bold mt-3">{name}</h2>
           <p className="text-sm text-muted-foreground mt-0.5">
