@@ -47,6 +47,8 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
   const [personalPerson, setPersonalPerson] = useState<Person | null>(null);
   const [avatarViewer, setAvatarViewer] = useState<string | null>(null);
+  type SortMode = 'date' | 'category' | 'card';
+  const [sortMode, setSortMode] = useState<SortMode>('date');
 
   const filtered = useMemo(() => {
     return expenses.filter(e => {
@@ -78,6 +80,73 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
     });
     return Object.entries(map).map(([name, total]) => ({ name, total }));
   }, [filtered]);
+
+  const groupedExpenses = useMemo(() => {
+    if (sortMode === 'date') {
+      const map: Record<string, Expense[]> = {};
+      [...filtered]
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .forEach(e => {
+          const d = new Date(e.date + 'T12:00:00');
+          const today = new Date();
+          const yesterday = new Date(); yesterday.setDate(today.getDate() - 1);
+          let label: string;
+          if (e.date === today.toISOString().split('T')[0]) {
+            label = 'Hoy';
+          } else if (e.date === yesterday.toISOString().split('T')[0]) {
+            label = 'Ayer';
+          } else {
+            label = d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+            label = label.charAt(0).toUpperCase() + label.slice(1);
+          }
+          if (!map[label]) map[label] = [];
+          map[label].push(e);
+        });
+      const order = [...filtered]
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .map(e => {
+          const d = new Date(e.date + 'T12:00:00');
+          const today = new Date();
+          const yesterday = new Date(); yesterday.setDate(today.getDate() - 1);
+          if (e.date === today.toISOString().split('T')[0]) return 'Hoy';
+          if (e.date === yesterday.toISOString().split('T')[0]) return 'Ayer';
+          const label = d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+          return label.charAt(0).toUpperCase() + label.slice(1);
+        });
+      const seen = new Set<string>();
+      const keys = order.filter(k => { if (seen.has(k)) return false; seen.add(k); return true; });
+      return keys.map(key => ({ label: key, expenses: map[key] }));
+    }
+
+    if (sortMode === 'category') {
+      const map: Record<string, Expense[]> = {};
+      [...filtered]
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .forEach(e => {
+          if (!map[e.category]) map[e.category] = [];
+          map[e.category].push(e);
+        });
+      return Object.entries(map)
+        .sort((a, b) => b[1].reduce((s, e) => s + e.amount, 0) - a[1].reduce((s, e) => s + e.amount, 0))
+        .map(([label, expenses]) => ({ label, expenses }));
+    }
+
+    if (sortMode === 'card') {
+      const map: Record<string, Expense[]> = {};
+      [...filtered]
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .forEach(e => {
+          const label = cardLabelMap[e.card] || e.card;
+          if (!map[label]) map[label] = [];
+          map[label].push(e);
+        });
+      return Object.entries(map)
+        .sort((a, b) => b[1].reduce((s, e) => s + e.amount, 0) - a[1].reduce((s, e) => s + e.amount, 0))
+        .map(([label, expenses]) => ({ label, expenses }));
+    }
+
+    return [];
+  }, [filtered, sortMode]);
 
   if (personalPerson) {
     return (
@@ -278,52 +347,73 @@ export default function Dashboard({ expenses, onUpdateExpense, onDeleteExpense }
       {filtered.length > 0 && (
         <Card className="border-0 shadow-md">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">{t('expenses')} ({filtered.length})</CardTitle>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-sm">{t('expenses')} ({filtered.length})</CardTitle>
+              <Select value={sortMode} onValueChange={(v) => setSortMode(v as typeof sortMode)}>
+                <SelectTrigger className="h-8 w-[130px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date">{t('date')}</SelectItem>
+                  <SelectItem value="category">{t('category')}</SelectItem>
+                  <SelectItem value="card">{t('card')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1.5 max-h-[60vh] overflow-y-auto overscroll-contain">
-              {filtered.slice().reverse().map(e => (
-                <div
-                  key={e.id}
-                  className={`flex items-center justify-between rounded-xl bg-muted/40 cursor-pointer hover:bg-muted/70 transition-colors active:bg-muted/90 select-none ${
-                    settings.compactCards ? 'p-2' : 'p-3'
-                  }`}
-                  onClick={() => setEditExpense(e)}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
-                      <CategoryIcon category={e.category} className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-sm font-medium truncate">{e.description}</p>
-                        <span className="text-xs text-muted-foreground shrink-0">{e.category}</span>
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto overscroll-contain">
+              {groupedExpenses.map(({ label, expenses }) => (
+                <div key={label}>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 sticky top-0 bg-background/95 py-1 backdrop-blur-sm">
+                    {label}
+                  </h3>
+                  <div className="space-y-1.5">
+                    {expenses.map(e => (
+                      <div
+                        key={e.id}
+                        className={`flex items-center justify-between rounded-xl bg-muted/40 cursor-pointer hover:bg-muted/70 transition-colors active:bg-muted/90 select-none ${
+                          settings.compactCards ? 'p-2' : 'p-3'
+                        }`}
+                        onClick={() => setEditExpense(e)}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
+                            <CategoryIcon category={e.category} className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm font-medium truncate">{e.description}</p>
+                              <span className="text-xs text-muted-foreground shrink-0">{e.category}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                              <CardBrandIcon card={e.card} className="h-3.5 w-3.5" />
+                              <span className="truncate">{cardLabelMap[e.card] || e.card} · {e.date}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {e.paymentType && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-medium">
+                                  {e.paymentType === 'credito' ? `💳 ${t('credit')}` : `💳 ${t('debit')}`}
+                                </span>
+                              )}
+                              {e.brand && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-medium">🏪 {e.brand}</span>
+                              )}
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-medium">
+                                👤 {PERSON_NAMES[e.paidBy]}
+                              </span>
+                              {e.thirdPartyName && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/20 text-accent-foreground font-medium">
+                                  {e.thirdPartyName}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="font-bold text-sm shrink-0 ml-2">{fmt(e.amount)}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
-                        <CardBrandIcon card={e.card} className="h-3.5 w-3.5" />
-                        <span className="truncate">{cardLabelMap[e.card] || e.card} · {e.date}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {e.paymentType && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-medium">
-                            {e.paymentType === 'credito' ? `💳 ${t('credit')}` : `💳 ${t('debit')}`}
-                          </span>
-                        )}
-                        {e.brand && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-medium">🏪 {e.brand}</span>
-                        )}
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-medium">
-                          👤 {PERSON_NAMES[e.paidBy]}
-                        </span>
-                        {e.thirdPartyName && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/20 text-accent-foreground font-medium">
-                            {e.thirdPartyName}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                  <span className="font-bold text-sm shrink-0 ml-2">{fmt(e.amount)}</span>
                 </div>
               ))}
             </div>

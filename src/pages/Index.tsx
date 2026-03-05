@@ -305,7 +305,7 @@ const Index = () => {
           <div className="flex items-center gap-2.5">
             <img
               src={logo}
-              alt="La Politzia de Gastos"
+              alt="Sheriff de Gastos"
               className="h-10 w-10 rounded-xl object-contain"
             />
             <div>
