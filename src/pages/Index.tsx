@@ -14,7 +14,7 @@ import {
 import { useCollection } from '@/hooks/useFirestore';
 import { Expense, SavingsGoal, Income, Budget, Debt, RecurringExpense } from '@/lib/types';
 import { orderBy } from 'firebase/firestore';
-import { BarChart3, PlusCircle, Target, DollarSign, PieChart, Settings2, Download, Upload, Thermometer, Languages, Settings, CreditCard } from 'lucide-react';
+import { BarChart3, PlusCircle, Target, DollarSign, PieChart, Settings2, Download, Upload, Thermometer, Languages, Settings, CreditCard, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
 import sheriffBoy from '@/assets/sheriff-boy.png';
@@ -34,6 +34,7 @@ import SettingsPage from '@/components/SettingsPage';
 import { useI18n } from '@/lib/i18n';
 import { getEarnedAchievements } from '@/lib/achievements';
 import ProfileDialog from '@/components/ProfileDialog';
+import StatementImporter from '@/components/StatementImporter';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 
 const TABS = [
@@ -41,6 +42,7 @@ const TABS = [
   { key: 'dashboard', labelKey: 'dashboard' as const, icon: BarChart3 },
   { key: 'gastometer', labelKey: 'gastometer' as const, icon: Thermometer },
   { key: 'debts', labelKey: 'debts' as const, icon: CreditCard },
+  { key: 'importer', labelKey: 'importer' as const, icon: FileText },
   { key: 'income', labelKey: 'income' as const, icon: DollarSign },
   { key: 'budgets', labelKey: 'budgets' as const, icon: PieChart },
   { key: 'goals', labelKey: 'goals' as const, icon: Target },
@@ -391,6 +393,7 @@ const Index = () => {
           {activeTab === 'income' && <IncomeSection incomes={incomes} expenses={expenses} onAddIncome={addIncome} onRemoveIncome={removeIncome} />}
           {activeTab === 'budgets' && <BudgetSection budgets={budgets} expenses={expenses} onAddBudget={addBudget} onRemoveBudget={removeBudget} />}
           {activeTab === 'goals' && <GoalsSection goals={goals} onAddGoal={addGoal} onUpdateGoal={updateGoal} onRemoveGoal={removeGoal} />}
+          {activeTab === 'importer' && <StatementImporter onExpenseAdded={addExpense} />}
           {activeTab === 'settings' && <SettingsPage />}
         </div>
       </main>
