@@ -5,9 +5,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CATEGORIES, CARDS, PERSON_NAMES, Person, PaymentType } from '@/lib/types';
 import CategoryIcon from '@/components/CategoryIcon';
 import CardBrandIcon from '@/components/CardBrandIcon';
+import { extractTextFromPDF, parseStatement, guessCategory, type BankKey } from '@/lib/statementParser';
 import {
   Upload, Loader2, Check, X, AlertTriangle,
-  ChevronDown, ChevronUp, Trash2, FileText
+  ChevronDown, ChevronUp, Trash2, FileText, Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -21,9 +22,9 @@ interface ParsedExpense {
   brand: string;
   paidBy: Person;
   paymentType: PaymentType;
-  confidence: 'high' | 'medium' | 'low';
   selected: boolean;
   expanded: boolean;
+  isManual?: boolean;
 }
 
 type AddExpenseFn = (item: {
@@ -41,22 +42,29 @@ type Step = 'upload' | 'parsing' | 'review' | 'saving' | 'done';
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
 
+const todayStr = () => new Date().toISOString().split('T')[0];
+
 export default function StatementImporter({ onExpenseAdded }: Props) {
   const [step, setStep] = useState<Step>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [defaultPerson, setDefaultPerson] = useState<Person>('boyfriend');
   const [expenses, setExpenses] = useState<ParsedExpense[]>([]);
+  const [unparsedLines, setUnparsedLines] = useState<string[]>([]);
+  const [detectedBank, setDetectedBank] = useState<BankKey>('generic');
   const [parseError, setParseError] = useState<string | null>(null);
   const [savingCount, setSavingCount] = useState(0);
   const [savedCount, setSavedCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const idCounter = useRef(0);
+
+  const nextId = () => `p-${++idCounter.current}-${Date.now()}`;
 
   // ── FILE HANDLING ─────────────────────────────────────────────
 
   const handleFile = useCallback((f: File) => {
-    const valid = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-    if (!valid.includes(f.type)) {
-      toast.error('Solo se aceptan PDF, PNG, JPG o WEBP');
+    if (f.type !== 'application/pdf') {
+      toast.error('Solo se aceptan archivos PDF');
       return;
     }
     if (f.size > 20 * 1024 * 1024) {
@@ -74,119 +82,48 @@ export default function StatementImporter({ onExpenseAdded }: Props) {
     if (f) handleFile(f);
   }, [handleFile]);
 
-  // ── AI PARSING ────────────────────────────────────────────────
+  // ── PARSING (regex, no AI) ─────────────────────────────────────
 
-  const parseStatement = async () => {
+  const parsePdf = async () => {
     if (!file) return;
     setStep('parsing');
     setParseError(null);
 
     try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      const isPDF = file.type === 'application/pdf';
-      const mediaType = file.type as 'application/pdf' | 'image/png' | 'image/jpeg' | 'image/webp';
-
-      const documentBlock = isPDF
-        ? { type: 'document', source: { type: 'base64', media_type: mediaType, data: base64 } }
-        : { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } };
-
-      const prompt = `You are a precise Mexican bank statement parser. Extract ALL expense/charge transactions from this document.
-
-Return ONLY valid JSON (no markdown, no explanation):
-
-{
-  "detectedBank": "BBVA|Santander|Banamex|Banorte|Amex|HSBC|Scotiabank|Other",
-  "expenses": [
-    {
-      "date": "YYYY-MM-DD",
-      "description": "cleaned merchant name",
-      "amount": 123.45,
-      "category": "Comida|Transporte|Entretenimiento|Ropa|Salud|Hogar|Educacion|Regalos|Suscripciones|Otro",
-      "brand": "store brand if known, else empty string",
-      "paymentType": "credito|debito",
-      "confidence": "high|medium|low"
-    }
-  ]
-}
-
-RULES:
-- Only include CHARGES (money going OUT). Skip: payments, deposits, balance transfers, credits, interest, annual fees
-- Amounts are always positive numbers
-- Dates MUST be YYYY-MM-DD. Infer the year from the statement header/period
-- Category rules: Comida=restaurants/food/delivery, Transporte=gas/uber/taxi/parking/toll, Entretenimiento=streaming/games/bars/movies, Ropa=clothing/shoes/fashion, Salud=pharmacy/doctor/gym/dental, Hogar=supermarket/home/furniture/utilities, Educacion=school/books/courses, Suscripciones=Netflix/Spotify/recurring monthly services, Regalos=gifts/flowers, Otro=everything else
-- confidence: high=clear merchant+amount, medium=some ambiguity, low=unclear
-- Extract EVERY charge without exception
-- If no charges found: { "detectedBank": "", "expenses": [] }`;
-
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 8000,
-          messages: [{ role: 'user', content: [documentBlock, { type: 'text', text: prompt }] }],
-        }),
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error?.message || `Error ${response.status}`);
-      }
-
-      const data = await response.json();
-      const text = data.content.filter((b: { type: string }) => b.type === 'text').map((b: { text: string }) => b.text).join('');
-      const clean = text.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(clean);
-
-      if (!Array.isArray(parsed.expenses)) throw new Error('Respuesta inválida del analizador');
-      if (parsed.expenses.length === 0) {
-        setParseError('No se encontraron cargos en el documento. Verifica que sea un estado de cuenta válido con transacciones.');
+      const text = await extractTextFromPDF(file);
+      if (!text.trim()) {
+        setParseError('No se pudo extraer texto del PDF. Verifica que el documento sea válido.');
         setStep('upload');
         return;
       }
 
-      // Match detected bank to card value
-      const bank = (parsed.detectedBank || '').toLowerCase();
-      let matchedCard = 'transferencia';
-      if (bank.includes('bbva') || bank.includes('bancomer')) matchedCard = 'bbva';
-      else if (bank.includes('santander')) matchedCard = 'santander';
-      else if (bank.includes('banamex') || bank.includes('citi')) matchedCard = 'banamex';
-      else if (bank.includes('banorte')) matchedCard = 'banorte';
-      else if (bank.includes('amex') || bank.includes('american')) matchedCard = 'amex';
+      const result = parseStatement(text);
 
-      const mapped: ParsedExpense[] = parsed.expenses.map((e: { date?: string; description?: string; amount?: number; category?: string; brand?: string; paymentType?: string; confidence?: string }, i: number) => ({
-        id: `p-${i}-${Date.now()}`,
-        date: String(e.date || new Date().toISOString().split('T')[0]),
-        description: String(e.description || 'Sin descripción').slice(0, 120),
-        amount: Math.abs(parseFloat(String(e.amount)) || 0),
-        category: CATEGORIES.includes(e.category as (typeof CATEGORIES)[number]) ? e.category! : 'Otro',
-        card: matchedCard,
-        brand: String(e.brand || ''),
-        paidBy: 'boyfriend' as Person,
-        paymentType: e.paymentType === 'debito' ? 'debito' : 'credito',
-        confidence: ['high', 'medium', 'low'].includes(e.confidence || '') ? e.confidence as 'high' | 'medium' | 'low' : 'medium',
+      const mapped: ParsedExpense[] = result.expenses.map((e, i) => ({
+        id: nextId(),
+        date: e.date,
+        description: e.description,
+        amount: e.amount,
+        category: e.category,
+        card: e.card,
+        brand: e.brand,
+        paidBy: defaultPerson,
+        paymentType: e.paymentType,
         selected: true,
         expanded: false,
+        isManual: false,
       }));
 
       setExpenses(mapped);
+      setUnparsedLines(result.unparsedLines);
+      setDetectedBank(result.detectedBank);
       setStep('review');
-      toast.success(`✅ ${mapped.length} transacciones detectadas`);
+      toast.success(`✅ ${mapped.length} transacciones detectadas` + (result.unparsedLines.length > 0 ? ` · ${result.unparsedLines.length} sin clasificar` : ''));
 
     } catch (err: unknown) {
       console.error(err);
-      const message = err instanceof Error ? err.message : 'Error al analizar el documento.';
-      setParseError(
-        message.includes('JSON')
-          ? 'No se pudo leer la respuesta. Intenta con un documento más claro o mejor resolución.'
-          : message
-      );
+      const message = err instanceof Error ? err.message : 'Error al leer el PDF.';
+      setParseError(message);
       setStep('upload');
     }
   };
@@ -205,11 +142,52 @@ RULES:
   const applyToAll = (patch: Partial<ParsedExpense>) =>
     setExpenses(prev => prev.map(e => ({ ...e, ...patch })));
 
+  const addManual = () => {
+    setExpenses(prev => [...prev, {
+      id: nextId(),
+      date: todayStr(),
+      description: '',
+      amount: 0,
+      category: 'Otro',
+      card: CARDS.find(c => !['efectivo', 'transferencia'].includes(c.value))?.value || 'bbva',
+      brand: '',
+      paidBy: defaultPerson,
+      paymentType: 'credito',
+      selected: true,
+      expanded: true,
+      isManual: true,
+    }]);
+  };
+
+  const promoteUnparsed = (line: string) => {
+    const parts = line.match(/^(.+?)\s+[\$]?\s*([\d,]+\.?\d{0,2})\s*$/);
+    const desc = parts ? parts[1].trim().slice(0, 120) : line.slice(0, 120);
+    const amount = parts ? parseFloat(parts[2].replace(/,/g, '')) || 0 : 0;
+    setExpenses(prev => [...prev, {
+      id: nextId(),
+      date: todayStr(),
+      description: desc,
+      amount: Math.abs(amount),
+      category: guessCategory(desc),
+      card: detectedBank !== 'generic' ? (CARDS.find(c => c.value === detectedBank)?.value || 'transferencia') : 'transferencia',
+      brand: '',
+      paidBy: defaultPerson,
+      paymentType: 'credito',
+      selected: true,
+      expanded: true,
+      isManual: true,
+    }]);
+    setUnparsedLines(prev => prev.filter(l => l !== line));
+  };
+
   // ── SAVING ────────────────────────────────────────────────────
 
   const saveSelected = async () => {
-    const toSave = expenses.filter(e => e.selected && e.amount > 0);
-    if (toSave.length === 0) { toast.error('Selecciona al menos un gasto'); return; }
+    const toSave = expenses.filter(e => e.selected && e.amount > 0 && e.description.trim());
+    if (toSave.length === 0) {
+      toast.error('Selecciona al menos un gasto con monto y descripción');
+      return;
+    }
 
     setStep('saving');
     setSavingCount(toSave.length);
@@ -219,7 +197,7 @@ RULES:
     for (const e of toSave) {
       try {
         await onExpenseAdded({
-          date: e.date, description: e.description, amount: e.amount,
+          date: e.date, description: e.description.trim(), amount: e.amount,
           category: e.category, card: e.card, brand: e.brand,
           paidBy: e.paidBy, paymentType: e.paymentType,
         });
@@ -234,7 +212,7 @@ RULES:
   };
 
   const reset = () => {
-    setStep('upload'); setFile(null); setExpenses([]);
+    setStep('upload'); setFile(null); setExpenses([]); setUnparsedLines([]);
     setParseError(null); setSavingCount(0); setSavedCount(0);
   };
 
@@ -253,11 +231,23 @@ RULES:
           Importar Estado de Cuenta
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Sube tu estado de cuenta en PDF o imagen. La IA lee y clasifica cada cargo automáticamente.
+          Sube tu estado de cuenta en PDF. El Sheriff lo lee y clasifica cada cargo automáticamente (sin IA, 100% gratis).
         </p>
       </div>
 
-      {/* Drop zone */}
+      {/* Person selector */}
+      <div className="space-y-2">
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">¿Quién pagó?</label>
+        <Select value={defaultPerson} onValueChange={v => setDefaultPerson(v as Person)}>
+          <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="boyfriend">{PERSON_NAMES.boyfriend}</SelectItem>
+            <SelectItem value="girlfriend">{PERSON_NAMES.girlfriend}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Drop zone - PDF only */}
       <div
         onDragOver={e => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
@@ -272,7 +262,7 @@ RULES:
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf,image/png,image/jpeg,image/jpg,image/webp"
+          accept=".pdf,application/pdf"
           className="hidden"
           onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
         />
@@ -281,7 +271,7 @@ RULES:
             <div className="text-5xl">📄</div>
             <p className="font-bold text-accent">{file.name}</p>
             <p className="text-xs text-muted-foreground">
-              {(file.size / 1024 / 1024).toFixed(2)} MB · {file.type.split('/')[1].toUpperCase()}
+              {(file.size / 1024 / 1024).toFixed(2)} MB · PDF
             </p>
             <button
               onClick={ev => { ev.stopPropagation(); setFile(null); }}
@@ -292,9 +282,9 @@ RULES:
           <div className="space-y-3">
             <Upload className="h-12 w-12 text-muted-foreground mx-auto" />
             <div>
-              <p className="font-semibold text-base">Arrastra tu estado de cuenta aquí</p>
+              <p className="font-semibold text-base">Arrastra tu estado de cuenta PDF aquí</p>
               <p className="text-sm text-muted-foreground mt-1">o toca para seleccionar</p>
-              <p className="text-xs text-muted-foreground mt-2">PDF · PNG · JPG · WEBP · máx. 20MB</p>
+              <p className="text-xs text-muted-foreground mt-2">Solo PDF · máx. 20MB</p>
             </div>
           </div>
         )}
@@ -307,7 +297,6 @@ RULES:
         </div>
       )}
 
-      {/* Bank logos */}
       <div className="p-4 rounded-xl bg-muted/40 space-y-2">
         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Bancos compatibles</p>
         <div className="flex flex-wrap gap-2">
@@ -320,8 +309,8 @@ RULES:
         </div>
       </div>
 
-      <Button onClick={parseStatement} disabled={!file} className="w-full h-12 text-base font-semibold">
-        🔍 Analizar con IA
+      <Button onClick={parsePdf} disabled={!file} className="w-full h-12 text-base font-semibold">
+        🔍 Analizar PDF
       </Button>
     </div>
   );
@@ -335,11 +324,11 @@ RULES:
         <span className="absolute -bottom-2 -right-2 text-3xl animate-bounce">🤠</span>
       </div>
       <div className="text-center space-y-1">
-        <p className="font-bold text-xl">El Sheriff está leyendo tu estado...</p>
+        <p className="font-bold text-xl">El Sheriff está leyendo tu PDF...</p>
         <p className="text-sm text-muted-foreground">Extrayendo y clasificando cada cargo</p>
       </div>
       <div className="space-y-2 w-full max-w-xs">
-        {['Leyendo documento...', 'Buscando transacciones...', 'Clasificando categorías...'].map((l, i) => (
+        {['Extrayendo texto...', 'Buscando transacciones...', 'Clasificando categorías...'].map((l, i) => (
           <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
             <Loader2 className="h-3 w-3 animate-spin shrink-0" />{l}
           </div>
@@ -383,12 +372,11 @@ RULES:
   return (
     <div className="space-y-4 pb-32">
 
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-lg font-bold">Revisar transacciones</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {expenses.length} detectadas en <span className="font-medium truncate">{file?.name}</span>
+            {expenses.length} detectadas en <span className="font-medium truncate">{file?.name}</span> · Banco: {detectedBank}
           </p>
         </div>
         <button onClick={reset} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 shrink-0">
@@ -396,7 +384,6 @@ RULES:
         </button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-2">
         <div className="p-3 rounded-xl bg-muted/50 text-center">
           <p className="text-xl font-bold">{expenses.length}</p>
@@ -412,87 +399,50 @@ RULES:
         </div>
       </div>
 
-      {/* Bulk controls */}
       <div className="flex flex-wrap items-center gap-2">
-        <button onClick={() => toggleAll(true)}
-          className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors">
-          ✓ Todos
-        </button>
-        <button onClick={() => toggleAll(false)}
-          className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors">
-          ✗ Ninguno
-        </button>
+        <button onClick={() => toggleAll(true)} className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors">✓ Todos</button>
+        <button onClick={() => toggleAll(false)} className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors">✗ Ninguno</button>
         <div className="ml-auto flex gap-1.5">
-          <select
-            defaultValue=""
-            className="text-xs border border-border rounded-lg px-2 py-1.5 bg-background"
-            onChange={e => { if (e.target.value) { applyToAll({ paidBy: e.target.value as Person }); e.target.value = ''; } }}
-          >
+          <select defaultValue="" className="text-xs border border-border rounded-lg px-2 py-1.5 bg-background"
+            onChange={e => { if (e.target.value) { applyToAll({ paidBy: e.target.value as Person }); e.target.value = ''; } }}>
             <option value="">👤 Persona</option>
             <option value="boyfriend">{PERSON_NAMES.boyfriend}</option>
             <option value="girlfriend">{PERSON_NAMES.girlfriend}</option>
           </select>
-          <select
-            defaultValue=""
-            className="text-xs border border-border rounded-lg px-2 py-1.5 bg-background"
-            onChange={e => { if (e.target.value) { applyToAll({ card: e.target.value }); e.target.value = ''; } }}
-          >
+          <select defaultValue="" className="text-xs border border-border rounded-lg px-2 py-1.5 bg-background"
+            onChange={e => { if (e.target.value) { applyToAll({ card: e.target.value }); e.target.value = ''; } }}>
             <option value="">💳 Tarjeta</option>
             {CARDS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         </div>
       </div>
 
-      {/* Confidence legend */}
-      <div className="flex items-center gap-4 text-[11px] text-muted-foreground px-1">
-        <span className="font-semibold">Confianza IA:</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent inline-block" />Alta</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />Media</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-destructive inline-block" />Baja — revisar</span>
-      </div>
+      <Button onClick={addManual} variant="outline" className="w-full h-10 text-sm">
+        <Plus className="h-4 w-4 mr-2 inline" /> Añadir gasto manualmente
+      </Button>
 
-      {/* Expense rows */}
       <div className="space-y-2">
         {expenses.map(e => (
           <div key={e.id} className={`rounded-2xl border-2 overflow-hidden transition-all duration-200 ${
             e.selected ? 'border-primary/40 bg-background' : 'border-border/50 bg-muted/20 opacity-55'
           }`}>
-            {/* Row summary */}
             <div className="flex items-center gap-2 p-3">
-              {/* Checkbox */}
-              <button
-                onClick={() => update(e.id, { selected: !e.selected })}
+              <button onClick={() => update(e.id, { selected: !e.selected })}
                 className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
                   e.selected ? 'bg-primary border-primary' : 'border-muted-foreground'
-                }`}
-              >
+                }`}>
                 {e.selected && <Check className="h-3 w-3 text-primary-foreground" />}
               </button>
-
-              {/* Confidence dot */}
-              <span className={`w-2 h-2 rounded-full shrink-0 ${
-                e.confidence === 'high' ? 'bg-accent'
-                : e.confidence === 'medium' ? 'bg-yellow-400'
-                : 'bg-destructive'
-              }`} />
-
-              {/* Category icon */}
               <div className="p-1 rounded-lg bg-primary/10 shrink-0">
                 <CategoryIcon category={e.category} className="h-3.5 w-3.5 text-primary" />
               </div>
-
-              {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate leading-tight">{e.description}</p>
+                <p className="text-sm font-medium truncate leading-tight">{e.description || '(sin descripción)'}</p>
                 <p className="text-[11px] text-muted-foreground truncate">
                   {e.date} · {CARDS.find(c => c.value === e.card)?.label || e.card} · {PERSON_NAMES[e.paidBy]}
                 </p>
               </div>
-
-              {/* Amount */}
               <span className="font-bold text-sm shrink-0">{fmt(e.amount)}</span>
-
-              {/* Actions */}
               <div className="flex gap-1 shrink-0">
                 <button onClick={() => update(e.id, { expanded: !e.expanded })}
                   className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center hover:bg-muted/60 transition-colors">
@@ -505,7 +455,6 @@ RULES:
               </div>
             </div>
 
-            {/* Expanded editor */}
             {e.expanded && (
               <div className="border-t border-border/50 px-3 pb-3 pt-3 grid grid-cols-2 gap-2 animate-in slide-in-from-top-1 duration-150">
                 <div className="col-span-2">
@@ -514,7 +463,7 @@ RULES:
                 </div>
                 <div>
                   <label className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">Monto (MXN)</label>
-                  <Input type="number" step="0.01" value={e.amount} onChange={ev => update(e.id, { amount: parseFloat(ev.target.value) || 0 })} className="h-8 text-sm mt-0.5" />
+                  <Input type="number" step="0.01" value={e.amount || ''} onChange={ev => update(e.id, { amount: parseFloat(ev.target.value) || 0 })} className="h-8 text-sm mt-0.5" />
                 </div>
                 <div>
                   <label className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">Fecha</label>
@@ -526,9 +475,7 @@ RULES:
                     <SelectTrigger className="h-8 text-xs mt-0.5"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {CATEGORIES.map(c => (
-                        <SelectItem key={c} value={c}>
-                          <span className="flex items-center gap-1.5"><CategoryIcon category={c} className="h-3 w-3" />{c}</span>
-                        </SelectItem>
+                        <SelectItem key={c} value={c}><span className="flex items-center gap-1.5"><CategoryIcon category={c} className="h-3 w-3" />{c}</span></SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -539,9 +486,7 @@ RULES:
                     <SelectTrigger className="h-8 text-xs mt-0.5"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {CARDS.map(c => (
-                        <SelectItem key={c.value} value={c.value}>
-                          <span className="flex items-center gap-1.5"><CardBrandIcon card={c.value} className="h-3.5 w-3.5" />{c.label}</span>
-                        </SelectItem>
+                        <SelectItem key={c.value} value={c.value}><span className="flex items-center gap-1.5"><CardBrandIcon card={c.value} className="h-3.5 w-3.5" />{c.label}</span></SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -558,7 +503,7 @@ RULES:
                 </div>
                 <div>
                   <label className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">Tipo de pago</label>
-                  <Select value={e.paymentType} onValueChange={v => update(e.id, { paymentType: v as PaymentType })}>
+                  <Select value={e.paymentType || 'credito'} onValueChange={v => update(e.id, { paymentType: v as PaymentType })}>
                     <SelectTrigger className="h-8 text-xs mt-0.5"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="credito">💳 Crédito</SelectItem>
@@ -576,14 +521,28 @@ RULES:
         ))}
       </div>
 
-      {/* Sticky save button */}
+      {/* Unparsed lines */}
+      {unparsedLines.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-sm font-bold text-muted-foreground">Líneas sin clasificar ({unparsedLines.length})</h3>
+          <p className="text-xs text-muted-foreground">Toca + para agregar como gasto manual</p>
+          <div className="space-y-1">
+            {unparsedLines.map((line, i) => (
+              <div key={i} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50 text-sm">
+                <span className="truncate flex-1 font-mono text-xs">{line}</span>
+                <button onClick={() => promoteUnparsed(line)}
+                  className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors shrink-0">
+                  <Plus className="h-4 w-4 text-primary" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="fixed bottom-16 left-0 right-0 px-4 pb-2 bg-background/90 backdrop-blur-sm border-t border-border z-20">
         <div className="max-w-2xl mx-auto pt-3">
-          <Button
-            onClick={saveSelected}
-            disabled={selectedCount === 0}
-            className="w-full h-12 text-base font-semibold"
-          >
+          <Button onClick={saveSelected} disabled={selectedCount === 0} className="w-full h-12 text-base font-semibold">
             💾 Importar {selectedCount} gastos · {fmt(totalAmount)}
           </Button>
         </div>
