@@ -183,6 +183,23 @@ export default function SettingsPage() {
         </SettingsRow>
 
         <SettingsRow
+          label={locale === 'es' ? 'Exportar para Hailey 📊' : 'Export for Hailey 📊'}
+          description={
+            locale === 'es'
+              ? 'Descarga el resumen de análisis (gastos, ingresos, recurrentes y deudas) que Hailey usa para sus consejos semanales'
+              : 'Download the analysis summary (expenses, incomes, recurring and debts) Hailey uses for her weekly advice'
+          }
+        >
+          <ActionButton
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('dinerito:export-hailey'));
+            }}
+          >
+            {locale === 'es' ? '⬇️ Exportar' : '⬇️ Export'}
+          </ActionButton>
+        </SettingsRow>
+
+        <SettingsRow
           label={locale === 'es' ? 'Importar datos' : 'Import data'}
           description={
             locale === 'es'
