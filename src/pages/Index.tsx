@@ -135,6 +135,43 @@ const Index = () => {
     toast.success(t('backupDownloaded'));
   };
 
+  // Hailey read path: a tidy, analysis-ready snapshot (not a backup).
+  // Spec: statement-import-format.md §Hailey. Read-only — writes nothing.
+  const handleExportHailey = () => {
+    const report = {
+      format: 'sheriff-hailey-export',
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      currency: 'MXN',
+      expenses: expenses.map(e => ({
+        date: e.date, amount: e.amount, description: e.description,
+        category: e.category, card: e.card, brand: e.brand,
+        paidBy: e.paidBy, paymentType: e.paymentType ?? '',
+        msi: e.msiCurrent && e.msiTotal ? `${e.msiCurrent}/${e.msiTotal}` : undefined,
+        importBatch: e.importBatch,
+      })),
+      incomes: incomes.map(i => ({
+        date: i.date, amount: i.amount, description: i.description, person: i.person,
+      })),
+      recurringExpenses: recurring.map(r => ({
+        name: r.name, amount: r.amount, category: r.category,
+        person: r.person, frequency: r.frequency, active: r.active,
+      })),
+      debts: debts.map(d => ({
+        name: d.name, totalAmount: d.totalAmount, amountPaid: d.amountPaid,
+        person: d.person, dueDate: d.dueDate,
+      })),
+    };
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hailey-export-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('📊 Exportación para Hailey descargada');
+  };
+
   const handleImport = async () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -228,11 +265,14 @@ const Index = () => {
   useEffect(() => {
     const onExport = () => handleExport();
     const onImport = () => handleImport();
+    const onExportHailey = () => handleExportHailey();
     window.addEventListener('dinerito:export', onExport);
     window.addEventListener('dinerito:import', onImport);
+    window.addEventListener('dinerito:export-hailey', onExportHailey);
     return () => {
       window.removeEventListener('dinerito:export', onExport);
       window.removeEventListener('dinerito:import', onImport);
+      window.removeEventListener('dinerito:export-hailey', onExportHailey);
     };
   }, [expenses, goals, incomes, budgets, debts, recurring, t]);
 
@@ -330,6 +370,9 @@ const Index = () => {
                   <Button variant="ghost" className="w-full justify-start gap-2" onClick={handleExport}>
                     <Download className="h-4 w-4" /> {t('exportData')}
                   </Button>
+                  <Button variant="ghost" className="w-full justify-start gap-2" onClick={handleExportHailey}>
+                    <Download className="h-4 w-4" /> 📊 Hailey
+                  </Button>
                   <Button variant="ghost" className="w-full justify-start gap-2" onClick={handleImport}>
                     <Upload className="h-4 w-4" /> {t('importData')}
                   </Button>
@@ -393,7 +436,7 @@ const Index = () => {
           {activeTab === 'income' && <IncomeSection incomes={incomes} expenses={expenses} onAddIncome={addIncome} onRemoveIncome={removeIncome} />}
           {activeTab === 'budgets' && <BudgetSection budgets={budgets} expenses={expenses} onAddBudget={addBudget} onRemoveBudget={removeBudget} />}
           {activeTab === 'goals' && <GoalsSection goals={goals} onAddGoal={addGoal} onUpdateGoal={updateGoal} onRemoveGoal={removeGoal} />}
-          {activeTab === 'importer' && <StatementImporter onExpenseAdded={addExpense} />}
+          {activeTab === 'importer' && <StatementImporter onExpenseAdded={addExpense} existingExpenses={expenses} />}
           {activeTab === 'settings' && <SettingsPage />}
         </div>
       </main>
