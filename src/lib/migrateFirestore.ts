@@ -28,6 +28,15 @@ function toIsoString(v: unknown): string {
 
 export function normalizeExpense(raw: Record<string, unknown>, id: string): Expense {
   const paidBy = raw.paidBy === "girlfriend" ? "girlfriend" : "boyfriend";
+  // MSI survives normalization only as a complete, in-range pair
+  // (spec §2: integers, 1 ≤ current ≤ total ≤ 60). A half pair or an
+  // out-of-range total is dropped, never kept half-alive (EVE-016).
+  const msiCur = raw.msiCurrent;
+  const msiTot = raw.msiTotal;
+  const msiValid =
+    typeof msiCur === "number" && typeof msiTot === "number" &&
+    Number.isInteger(msiCur) && Number.isInteger(msiTot) &&
+    msiCur >= 1 && msiTot >= msiCur && msiTot <= 60;
   const category = typeof raw.category === "string" && CATEGORIES.includes(raw.category as typeof CATEGORIES[number])
     ? raw.category
     : "Otro";
@@ -43,6 +52,10 @@ export function normalizeExpense(raw: Record<string, unknown>, id: string): Expe
     createdAt: toIsoString(raw.createdAt),
     paymentType: raw.paymentType === "credito" || raw.paymentType === "debito" ? raw.paymentType : undefined,
     thirdPartyName: typeof raw.thirdPartyName === "string" && raw.thirdPartyName ? raw.thirdPartyName : undefined,
+    dedupeKey: typeof raw.dedupeKey === "string" && raw.dedupeKey ? raw.dedupeKey : undefined,
+    importBatch: typeof raw.importBatch === "string" && raw.importBatch ? raw.importBatch : undefined,
+    msiCurrent: msiValid ? (msiCur as number) : undefined,
+    msiTotal: msiValid ? (msiTot as number) : undefined,
   };
 }
 

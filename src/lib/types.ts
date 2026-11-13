@@ -19,6 +19,13 @@ export interface Expense {
   createdAt: string;
   paymentType?: PaymentType;
   thirdPartyName?: string;
+  /** Statement-import provenance (optional; absent on manually entered expenses). */
+  dedupeKey?: string;
+  /** Batch id of the statement import that created this expense, e.g. "amex-2026-04". */
+  importBatch?: string;
+  /** MSI (meses sin intereses): this row is installment `msiCurrent` of `msiTotal`. */
+  msiCurrent?: number;
+  msiTotal?: number;
 }
 
 export interface Income {
